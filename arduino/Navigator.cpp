@@ -6,7 +6,7 @@
 //SoftwareSerial softSerial(8, 7); // These pins may change depending on what board you're using
 //Adafruit_GPS GPS(&softSerial);
 
-static const int RXPin = 11, TXPin = 10;
+static const int RXPin = 12, TXPin = 11;
 static const uint32_t GPSBaud = 9600;
 
 // The TinyGPS++ object
@@ -33,19 +33,19 @@ SIGNAL(TIMER0_COMPA_vect)
  **********************************************/
 void Navigator::useInterrupt(boolean v) 
 {
-  //if (v) 
-  //{
+  if (v) 
+  {
     // See datasheet to understand this lower-level sorcery
-  //  OCR0A = 0xAF;
-  //  TIMSK0 |= _BV(OCIE0A);
-  //  usingInterrupt = true;
-  //} 
-  //else 
-  //{
+    OCR0A = 0xAF;
+    TIMSK0 |= _BV(OCIE0A);
+    usingInterrupt = true;
+  } 
+  else 
+  {
     // do not call the interrupt function COMPA anymore
-   // TIMSK0 &= ~_BV(OCIE0A);
-   // usingInterrupt = false;
-  //}
+    TIMSK0 &= ~_BV(OCIE0A);
+    usingInterrupt = false;
+  }
 }
 
 
@@ -57,7 +57,7 @@ void Navigator::begin(void)
 {
   // *** GPS ***
   ss.begin(GPSBaud);
-
+  useInterrupt(false);
   // *** Comapss ***
   if(!mag.begin())
   {
@@ -88,7 +88,8 @@ double Navigator::getDistance(void)
   }
   double deltaLat = gps.location.lat() - targetLat;
   double deltaLon = gps.location.lng() - targetLon;
-  return sqrt(deltaLat * deltaLat + deltaLon * deltaLon) * 100000;
+  double distance = sqrt(deltaLat * deltaLat + deltaLon * deltaLon) * 100000;
+  return distance;
 }
 
 
@@ -117,7 +118,7 @@ double Navigator::readCompass(void)
   mag.getEvent(&event);
   float heading = atan2(event.magnetic.y, event.magnetic.x) * 180 / 3.14159265359; // Convert to degrees  
   //heading += 180; //I have the compass sitting sideways  
-  
+  Serial.print("Heading:"); Serial.println(heading);
   // Normalize to 0-360
   if (heading < 0)
     heading = 360 + heading;

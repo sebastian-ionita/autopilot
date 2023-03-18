@@ -4,7 +4,8 @@
 void Beeper::begin(int speaker_pin)
 {
   pin = speaker_pin;
-  pinMode(pin, OUTPUT);
+  pinMode(pin, OUTPUT);  
+  digitalWrite(pin, HIGH);
   
 }
 

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "BoatController.h"
 //#include <Servo.h>
-#include <SoftwareServo.h>
+//#include <SoftwareServo.h>
 
 #define DEBUG // enable serial output for debugging
 
@@ -15,19 +15,44 @@
  * passing the constructor a left engine pin 
  * and a right engine pin number.
  **********************************************/
-BoatController::BoatController(int leftEngine, int rightEngine)
+BoatController::BoatController(int servoPin)
 {
-  leftEnginePin = leftEngine;
-  rightEnginePin = rightEngine;
+  //leftEnginePin = leftEngine;
+  //rightEnginePin = rightEngine;
   
-  pinMode(leftEnginePin, OUTPUT);
-  pinMode(rightEnginePin, OUTPUT);
-  //pinMode(30, OUTPUT); // Servo
-  servo.attach(30);
+  //pinMode(leftEnginePin, OUTPUT);
+  //pinMode(rightEnginePin, OUTPUT);
+  pinMode(servoPin, OUTPUT); // Servo
+  //servo.attach(6);
+
+
 }
 
 void BoatController::beginServo(void) {
   //servo.attach(30);
+}
+
+void servoPosition(int servopin, int degrees){
+  
+  // 600 = 0
+  // 2380 = 180 
+  // 9.88 per degree
+  
+  int pulseMicros = 0;
+  if(degrees < 20) {
+    pulseMicros = 800;
+  } else if (degrees > 160) {
+    pulseMicros = 2180;
+  } else {
+    pulseMicros = map(degrees, 0, 180, 600, 2380); // 600 = 0, 2380 = 180, 9.88 per degree;
+  }  
+  
+  for(int i=0; i<24; i++) { //gets about 90 degrees movement, call twice or change i<16 to i<32 if 180 needed; set to 24 for 140;
+    digitalWrite(servopin, HIGH);
+    delayMicroseconds(pulseMicros);
+    digitalWrite(servopin, LOW);
+    delay(25);
+  }
 }
 
 
@@ -47,15 +72,22 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
   double absRelativeBearing = abs(relativeBearing);
   int turnSpeed;
   
-  int servoNum = 180 - map(relativeBearing, -90, 90, 0, 180);
+  int servoNum = (180 - map(relativeBearing, -90, 90, 0, 180));
   #ifdef DEBUG
     Serial.print("Servo: ");
     Serial.println(servoNum); 
   #endif 
   //analogWrite(11, servoNum);
   //delay(1000);
-  servo.write(servoNum);
-  servo.refresh();
+  int servoMilis = map(servoNum, 0, 180, 600, 2380); // 600 = 0; 2380 = 180, 9.88 per degree
+  
+    Serial.println(servoMilis);
+  
+  servoPosition(6, servoNum);
+  //servo.write(90); 
+
+
+  //servo.refresh();
   
   /* *** CALCULATE TURNSPEED ***
    * In this first section we calculate what the turn speed should be. The further off course, the more one of
