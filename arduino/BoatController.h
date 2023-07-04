@@ -1,20 +1,21 @@
 //#include <SoftwareServo.h>
 
 // PWM motor speeds
-#define FAST 255
-#define SLOW 255
+#define FAST 100
+#define SLOW 100
 
 class BoatController
 {
   public:
-  BoatController(int servoPin);
+  BoatController(int servoPin, int motorPin);
   void adjustHeading(double relativeBearing, int speed);
-  void stopEngines(void);
+  void stopEngines(int servoPin);
   void beginServo(void);
  //SoftwareServo servo;
   
   private:
   int leftEnginePin;
   int rightEnginePin;
+  int motorPin;
   //SoftwareServo servo;
 };

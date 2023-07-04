@@ -6,6 +6,7 @@
 
 void LoRaMessenger::begin()
 {
+  Serial.println("LoRaMessenger");
   if (!LoRa.begin(433E6)) {             // initialize ratio at 915 MHz
     Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
@@ -37,7 +38,6 @@ void LoRaMessenger::onReceive(int packetSize)
 void LoRaMessenger::send(String message)
 {
   LoRa.beginPacket();
-  LoRa.print("Distance ");
   LoRa.print(message);
   LoRa.endPacket();
   LoRa.receive();    

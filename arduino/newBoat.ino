@@ -25,6 +25,7 @@
 //#include <Servo.h>
 #include <SPI.h>
 #include <LoRa.h>
+#include <IBusBM.h>
 
 // *** Includes ***
 #include "BoatController.h"
@@ -40,6 +41,7 @@
 //#define RIGHT_ENGINE_PIN1 6
 //#define RIGHT_ENGINE_PIN 7
 #define SERVO_PIN 6
+#define MOTOR_PIN 7
 
 #define BEEPER_PIN 5
 
@@ -52,11 +54,11 @@
 * blotchy, but its well worth it when something isn't working right. Note that
 * some of the other classes may have their own debug mode as well. 
 ******************************************************************************/
-#define DEBUG // Enables serial output feedback for basic functions
+//#define DEBUG // Enables serial output feedback for basic functions
 
 // *** Globals ***
 Navigator nav;
-BoatController controller(SERVO_PIN);
+BoatController controller(SERVO_PIN, MOTOR_PIN);
 Path path;
 Beeper beeper;
 LoRaMessenger loRaMessenger;
@@ -68,17 +70,28 @@ void setup()
 {
   
   
-  nav.begin();
+   Serial.println("setup");
    
-  beeper.begin(BEEPER_PIN);
   loRaMessenger.begin();
+  nav.begin();
+  beeper.begin(BEEPER_PIN);
+
+  
+ 
   //path.addWaypoint(44.40137415624203, 26.097540411523457, SLOW);//vdf mega image
   //path.addWaypoint(44.40247667463061, 26.093612582007538, SLOW);//solca bariera
+  //path.addWaypoint(44.40271144491504, 26.094229880607987, SLOW); //solca casa drept terasa
+  //path.addWaypoint(44.42718003495822, 26.092074449012067, SLOW); //constitutiei 1
+  //path.addWaypoint(44.40502614603183, 26.102622364772053, SLOW); ///ac tineretului
+  
+  path.addWaypoint(44.96402978199103, 24.894378956501285, SLOW); // purcareni 7 salcie
+  
+ 
 
   //path.addWaypoint(30.114868, -81.746674, FAST);
 
   
-    path.addWaypoint(44.404811107531685, 26.103457001243456, SLOW);//tineretului ponton
+    //path.addWaypoint(44.404811107531685, 26.103457001243456, SLOW);//tineretului ponton
     //path.addWaypoint(44.40499891489526, 26.103412999862424, SLOW);//tineretului ponton baza
     
 
@@ -92,16 +105,20 @@ void setup()
   #ifdef DEBUG
   Serial.begin(9600);
   #endif
+  //beeper.beep3();
   while(!nav.hasFix()) {
     Serial.println("Waiting for fix...");
+    //beeper.beep(15);
+    //delay(1000);
   }
   Serial.println("Got a GPS fix");
   beeper.beep3(); // A happy little 3 chirps to know we have fix
-  controller.beginServo(); 
+  //controller.beginServo(); 
   
   timer.every(2000, sendLoRaData, (void*)2);
   
 }
+
 
 void loop()
 {
@@ -116,17 +133,18 @@ void loop()
     nav.setTarget(path.getLat(), path.getLon());
 
     // While we haven't reached waypoint
-    while(nav.getDistance() > WAYPOINT_PROXIMITY)
+    double distance = nav.getDistance();
+    while(distance > WAYPOINT_PROXIMITY)
     {
       timer.update();
       //Serial.print(nav.getRelativeBearing()); 
       // Get the relative bearing to adjust the motors accordingly
-      controller.adjustHeading(nav.getRelativeBearing(), path.getSpeed());
+      controller.adjustHeading(nav.getRelativeBearing(), getSpeedFromDistance(distance));
       
       #ifdef DEBUG
-        Serial.print("Distance: "); 
-        Serial.println(nav.getDistance());
-      delay(500);
+        //Serial.print("Distance: "); 
+        //Serial.println(nav.getDistance());
+        //delay(500);
       #endif     
     }    
     
@@ -140,7 +158,7 @@ void loop()
   
   
   // All waypoints reached
-  controller.stopEngines();
+  controller.stopEngines(SERVO_PIN);
   
   // Shutdown
   cli(); // Disable interrupts
@@ -149,7 +167,38 @@ void loop()
   
 }
 
+int getSpeedFromDistance(double distance) {
+  //distance in meters
+  if(distance >= 25)
+    return 80; //highest value
+  if(distance >= 20)
+    return 70;
+  if(distance >= 15)
+    return 50;
+  if(distance >= 10)
+    return 35;
+  return 20;  
+}
+
 void sendLoRaData(void* context) {
-  Serial.println("sending");
-  loRaMessenger.send(String(nav.getDistance()));
+  //controller.setControlSource();
+  //int pulseMicros = 1000;
+  //int servopin = 7;
+   //for(int i=0; i<2; i++) { //gets about 90 degrees movement, call twice or change i<16 to i<32 if 180 needed; set to 24 for 140;
+    //digitalWrite(servopin, HIGH);
+    //delayMicroseconds(pulseMicros);
+    //digitalWrite(servopin, LOW);
+    
+    //delayMicroseconds(pulseMicros);
+    //delay(25);
+  //}
+  //Serial.println(nav.getLat(), 8);
+  //String message = "BL:";
+  //message += String(nav.getLat(), 8);
+  //message += ",";
+  //message += String(nav.getLng(), 8) + "|";
+  //message += "D:";
+  //message += String(nav.getDistance());
+  //Serial.println(message);
+  //loRaMessenger.send(message);
 }

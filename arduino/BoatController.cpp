@@ -2,8 +2,14 @@
 #include "BoatController.h"
 //#include <Servo.h>
 //#include <SoftwareServo.h>
+#include <IBusBM.h>
 
-#define DEBUG // enable serial output for debugging
+HardwareSerial& ibusRcSerial = Serial1;
+IBusBM ibusRc;
+
+boolean externalControl = true;
+
+//#define DEBUG // enable serial output for debugging
 
 
 
@@ -15,45 +21,120 @@
  * passing the constructor a left engine pin 
  * and a right engine pin number.
  **********************************************/
-BoatController::BoatController(int servoPin)
+BoatController::BoatController(int servoPin, int motorPin)
 {
   //leftEnginePin = leftEngine;
   //rightEnginePin = rightEngine;
   
   //pinMode(leftEnginePin, OUTPUT);
-  //pinMode(rightEnginePin, OUTPUT);
-  pinMode(servoPin, OUTPUT); // Servo
+  //pinMode(motorPin, OUTPUT);
+   // Servo    
+   //pinMode(servoPin, OUTPUT);
+   
+   pinMode(motorPin, OUTPUT);
+   
+  //digitalWrite(servoPin, HIGH);
+  //digitalWrite(servoPin, HIGH);
+  
+  ibusRc.begin(ibusRcSerial);
   //servo.attach(6);
 
 
 }
 
+int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue){
+  uint16_t ch = ibusRc.readChannel(channelInput);
+  if (ch < 100) return defaultValue;
+  return map(ch, 1000, 2000, minLimit, maxLimit);
+}
+
+
 void BoatController::beginServo(void) {
   //servo.attach(30);
 }
-
-void servoPosition(int servopin, int degrees){
-  
-  // 600 = 0
-  // 2380 = 180 
-  // 9.88 per degree
-  
-  int pulseMicros = 0;
+void moveServo(int degrees, int servopin) {
+    int pulseMicros = 0;
   if(degrees < 20) {
     pulseMicros = 800;
   } else if (degrees > 160) {
-    pulseMicros = 2180;
+    pulseMicros = map(130, 0, 180, 600, 2380);
   } else {
     pulseMicros = map(degrees, 0, 180, 600, 2380); // 600 = 0, 2380 = 180, 9.88 per degree;
   }  
-  
+
+  Serial.print("servo");
+  Serial.println(degrees);
+  noInterrupts();
   for(int i=0; i<24; i++) { //gets about 90 degrees movement, call twice or change i<16 to i<32 if 180 needed; set to 24 for 140;
     digitalWrite(servopin, HIGH);
     delayMicroseconds(pulseMicros);
     digitalWrite(servopin, LOW);
+    
+    //delayMicroseconds(pulseMicros);
     delay(25);
   }
+  interrupts();
 }
+
+void gas(int speed) {
+  if(externalControl) {        
+    pinMode(7, INPUT);
+    return;
+  }
+      
+  pinMode(7, OUTPUT);
+  int translatedSpeed = map(speed, 0, 100, 50, 100); //translate input speed only to forward rotation;
+  int pulseMicros = pulseMicros = map(translatedSpeed, 0, 100, 600, 2380); // 600 = 0, 2380 = 180, 9.88 per degree;
+
+  Serial.print("servo");
+  //Serial.println(degrees);
+  noInterrupts();
+  for(int i=0; i<32; i++) { //gets about 90 degrees movement, call twice or change i<16 to i<32 if 180 needed; set to 24 for 140;
+    digitalWrite(7, HIGH);
+    delayMicroseconds(pulseMicros);
+    digitalWrite(7, LOW);
+    
+    //delayMicroseconds(pulseMicros);
+    delay(25);
+  }
+  interrupts();
+}
+
+
+
+void servoPosition(int servopin, int degrees){  
+  
+  // 600 = 0
+  // 2380 = 180 
+  // 9.88 per degree
+  int value = readChannel(2, -100, 100, 0);
+  Serial.println(value);
+  if(value <-1) {    
+    pinMode(servopin, INPUT);
+    externalControl = true;
+    //moveServo(200, 7);
+    Serial.println("Steering off");
+    //int value2 = readChannel(0, -100, 100, 0);
+    //int remoteDegr = map(value2, 0, 180, -100, 100);
+    
+    //Serial.println(value2);
+    //moveServo(remoteDegr, servopin);
+    return;
+  }
+  externalControl = false;
+  
+  pinMode(servopin, OUTPUT);
+  
+  
+  //Serial.println("Steering on");
+  
+  moveServo(degrees, servopin);
+  
+  //moveServo(90, servopin);
+
+}
+
+
 
 
 /**********************************************
@@ -68,22 +149,27 @@ void servoPosition(int servopin, int degrees){
  **********************************************/
 void BoatController::adjustHeading(double relativeBearing, int speed)
 {
-  Serial.println("adjustHeading");
+  //Serial.println("adjustHeading");
   double absRelativeBearing = abs(relativeBearing);
   int turnSpeed;
+
+  
   
   int servoNum = (180 - map(relativeBearing, -90, 90, 0, 180));
   #ifdef DEBUG
-    Serial.print("Servo: ");
-    Serial.println(servoNum); 
+    //Serial.print("Servo: ");
+    //Serial.println(servoNum); 
+  Serial.print("relativeBearing");  
+  Serial.println(relativeBearing);
   #endif 
   //analogWrite(11, servoNum);
   //delay(1000);
-  int servoMilis = map(servoNum, 0, 180, 600, 2380); // 600 = 0; 2380 = 180, 9.88 per degree
+  //int servoMilis = map(servoNum, 0, 180, 600, 2380); // 600 = 0; 2380 = 180, 9.88 per degree
   
-    Serial.println(servoMilis);
+    //Serial.println(servoMilis);
   
   servoPosition(6, servoNum);
+  gas(speed);
   //servo.write(90); 
 
 
@@ -97,10 +183,18 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
    // turnSpeed = speed * (1 - absRelativeBearing / 90);
   //else
   //  turnSpeed = 0; // Really sharp turn
+  
  
   #ifdef DEBUG
   Serial.print("\nRelBearing: ");
   Serial.print(relativeBearing);
+  //Serial.print(" ");
+  #endif 
+
+  
+  #ifdef DEBUG
+  Serial.print("\nSpeed: ");
+  Serial.print(speed);
   //Serial.print(" ");
   #endif 
    
@@ -147,11 +241,12 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
  * stopEngines()
  * I feel like this one is pretty obvious.
  **********************************************/
- void BoatController::stopEngines(void)
+ void BoatController::stopEngines(int servoPin)
  {
-    analogWrite(leftEnginePin, 0);
-    analogWrite(rightEnginePin, 0);
-    
+  
+    //analogWrite(leftEnginePin, 0);
+    //analogWrite(rightEnginePin, 0);
+    pinMode(servoPin, INPUT);
     #ifdef DEBUG
     Serial.println("Stopping");
     #endif

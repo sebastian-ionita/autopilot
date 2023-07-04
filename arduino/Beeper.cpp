@@ -11,15 +11,13 @@ void Beeper::begin(int speaker_pin)
 
 void Beeper::beep(int ms)
 {
-  digitalWrite(pin, HIGH);
-  delay(ms);
   digitalWrite(pin, LOW);
+  delay(ms);
+  digitalWrite(pin, HIGH);
 }
 
 void Beeper::beep3(void)
 {
-  digitalWrite(pin, HIGH);
-  delay(100);
   digitalWrite(pin, LOW);
   delay(100);
   digitalWrite(pin, HIGH);
@@ -30,6 +28,7 @@ void Beeper::beep3(void)
   delay(100);
   digitalWrite(pin, LOW);
   delay(100);
+  digitalWrite(pin, HIGH);
 }
 
 void Beeper::countdown(int mins)
