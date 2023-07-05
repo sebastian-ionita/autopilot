@@ -27,7 +27,7 @@ class Navigator
   double readCompass(void);
   float getLat();
   float getLng();
-  double getRelativeBearing(void);
+  double getRelativeBearing(double* headingValue);
   bool hasFix();
   
   private:

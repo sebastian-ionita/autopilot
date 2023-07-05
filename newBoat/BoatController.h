@@ -8,7 +8,7 @@ class BoatController
 {
   public:
   BoatController(int servoPin, int motorPin);
-  void adjustHeading(double relativeBearing, int speed);
+  int adjustHeading(double relativeBearing, int speed);
   void stopEngines(int servoPin);
   void beginServo(void);
  //SoftwareServo servo;

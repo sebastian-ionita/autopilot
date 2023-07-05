@@ -128,13 +128,11 @@ void Navigator::setTarget(double lat, double lon)
 double Navigator::readCompass(void)
 {
   Vector norm = compass.readNormalize();
+
   // Calculate heading
   float heading = atan2(norm.YAxis, norm.XAxis);
+
   // Set declination angle on your location and fix heading
-  // You can find your declination on: http://magnetic-declination.com/
-  // (+) Positive or (-) for negative
-  // For Bytom / Poland declination angle is 4'26E (positive)
-  // Formula: (deg + (min / 60.0)) / (180 / M_PI);
   float declinationAngle = (6.0 + (13.0 / 60.0)) / (180 / PI);
   heading += declinationAngle;
   // Correct for heading < 0deg and heading > 360deg
@@ -152,30 +150,9 @@ double Navigator::readCompass(void)
   Serial.print("heading:");
   Serial.println(headingDegrees);
   #endif
+
   return headingDegrees;
   
-  
-  // Output
-  //Serial.print(" Heading = ");
-  //Serial.print(heading);
-  //Serial.print(" Degress = ");
-  //maybe remove this 360 orientation change
-  //Serial.print(360 - headingDegrees);
-  //Serial.print(" Azimuth direction = ");
-  //Serial.print(getAzimuthHeading(headingDegrees));
-  //Serial.println();
-  //lsm.read(); // Read from magnometer
-  //sensors_event_t event; 
-  //mag.getEvent(&event);
-  //float heading = atan2(event.magnetic.y, event.magnetic.x) * 180 / 3.14159265359; // Convert to degrees  
-  //heading += 180; //I have the compass sitting sideways  
-  //Serial.print("Heading:"); 
-  //Serial.println(heading);
-  // Normalize to 0-360
-  //if (heading < 0)
-  //  heading = 360 + heading;
-    
-  //return heading; 
 }
 
 float Navigator::getLat() {
@@ -193,7 +170,7 @@ float Navigator::getLng() {
  * boat to the target. If the target is to the
  * right of the boat, the angle will negative.
  **********************************************/
-double Navigator::getRelativeBearing(void)
+double Navigator::getRelativeBearing(double* headingValue)
 {
  
   // Calculate angle from current position to target with respect to North
@@ -203,10 +180,14 @@ double Navigator::getRelativeBearing(void)
   Serial.println(bearing);
   #endif
   
-  
+  //read heading from compass
+  double headingDegrees = readCompass();
+
+  //set heading degrees to the pointer received as input
+  *headingValue = headingDegrees;
+
   // Relative bearing
-  //double relativeBearing = readCompass() - bearing + MAGNETIC_DECLINATION + CALIBRATION;
-  double relativeBearing = readCompass() - bearing + CALIBRATION;
+  double relativeBearing = headingDegrees - bearing + CALIBRATION;
   
   // Normalize such that the front of the boat reresents 0 degrees, and left is negative
   if (relativeBearing > 180)
@@ -215,7 +196,6 @@ double Navigator::getRelativeBearing(void)
   //Serial.print("Bearing:"); Serial.println(relativeBearing);
   return relativeBearing; 
 }
-
 
 /**********************************************
  * hasFix()

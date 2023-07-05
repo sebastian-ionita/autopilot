@@ -147,31 +147,29 @@ void servoPosition(int servopin, int degrees){
  * is negative. The angle is measured from the 
  * target to the front of the boat.
  **********************************************/
-void BoatController::adjustHeading(double relativeBearing, int speed)
+int BoatController::adjustHeading(double relativeBearing, int speed)
 {
   //Serial.println("adjustHeading");
   double absRelativeBearing = abs(relativeBearing);
   int turnSpeed;
-
   
+  int servoValue = (180 - map(relativeBearing, -90, 90, 0, 180));
   
-  int servoNum = (180 - map(relativeBearing, -90, 90, 0, 180));
   #ifdef DEBUG
     //Serial.print("Servo: ");
-    //Serial.println(servoNum); 
+    //Serial.println(servoValue); 
   Serial.print("relativeBearing");  
   Serial.println(relativeBearing);
   #endif 
-  //analogWrite(11, servoNum);
+  
+  //analogWrite(11, servoValue);
   //delay(1000);
-  //int servoMilis = map(servoNum, 0, 180, 600, 2380); // 600 = 0; 2380 = 180, 9.88 per degree
+  //int servoMilis = map(servoValue, 0, 180, 600, 2380); // 600 = 0; 2380 = 180, 9.88 per degree
+  //Serial.println(servoMilis);
   
-    //Serial.println(servoMilis);
-  
-  servoPosition(6, servoNum);
+  servoPosition(6, servoValue);
   gas(speed);
   //servo.write(90); 
-
 
   //servo.refresh();
   
@@ -198,9 +196,8 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
   //Serial.print(" ");
   #endif 
    
-  if ( relativeBearing > 0 ) // positive bearing, turn left
+  if (relativeBearing > 0) // positive bearing, turn left
   {
-    
     
     // Ensures motors won't run while in debug mode
     //#ifndef DEBUG
@@ -218,7 +215,6 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
   }
   else // negative bearing, turn right
   {
-    
     // Ensures motors won't run while in debug mode
     //#ifndef DEBUG
     //analogWrite(leftEnginePin, speed); // full speed
@@ -234,6 +230,8 @@ void BoatController::adjustHeading(double relativeBearing, int speed)
     //Serial.println(")");
     #endif
   }
+
+  return servoValue;
 }
 
 

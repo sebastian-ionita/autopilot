@@ -65,19 +65,20 @@ LoRaMessenger loRaMessenger;
 
 Timer timer;
 
+double distance = 0;
+int motorSpeed = 0;
+int servoValue = 0;
+double relativeBearing = 0;
+double headingDegrees = 0;
 
 void setup()
 {
-  
-  
-   Serial.println("setup");
+  Serial.println("Setup started");
    
   loRaMessenger.begin();
   nav.begin();
   beeper.begin(BEEPER_PIN);
 
-  
- 
   //path.addWaypoint(44.40137415624203, 26.097540411523457, SLOW);//vdf mega image
   //path.addWaypoint(44.40247667463061, 26.093612582007538, SLOW);//solca bariera
   //path.addWaypoint(44.40271144491504, 26.094229880607987, SLOW); //solca casa drept terasa
@@ -86,21 +87,13 @@ void setup()
   
   path.addWaypoint(44.96402978199103, 24.894378956501285, SLOW); // purcareni 7 salcie
   
- 
-
-  //path.addWaypoint(30.114868, -81.746674, FAST);
-
-  
-    //path.addWaypoint(44.404811107531685, 26.103457001243456, SLOW);//tineretului ponton
-    //path.addWaypoint(44.40499891489526, 26.103412999862424, SLOW);//tineretului ponton baza
-    
-
+  //path.addWaypoint(44.404811107531685, 26.103457001243456, SLOW);//tineretului ponton
+  //path.addWaypoint(44.40499891489526, 26.103412999862424, SLOW);//tineretului ponton baza
   
   //pinMode(LEFT_ENGINE_PIN1, OUTPUT); //IN3
   //pinMode(RIGHT_ENGINE_PIN, OUTPUT); //IN4
   //digitalWrite(LEFT_ENGINE_PIN1, HIGH);
   //digitalWrite(RIGHT_ENGINE_PIN, HIGH);
-  
   
   #ifdef DEBUG
   Serial.begin(9600);
@@ -115,31 +108,38 @@ void setup()
   beeper.beep3(); // A happy little 3 chirps to know we have fix
   //controller.beginServo(); 
   
-  timer.every(2000, sendLoRaData, (void*)2);
+
+  //every 1 second, send boat live data to received on the mobile
+  timer.every(1000, sendBoatLiveData, (void*)2);
+
+  Serial.println("Setup finished");
   
 }
 
 
 void loop()
 {
-  Serial.println("loop");
+  Serial.println("Loop cycle");
   timer.update();
   // While we still have waypoints to reach
   while(path.hasWaypoints())
   {
+
     timer.update();
-    Serial.print("1"); 
+
     // Lock in the current waypoint
     nav.setTarget(path.getLat(), path.getLon());
 
     // While we haven't reached waypoint
-    double distance = nav.getDistance();
+    distance = nav.getDistance();
     while(distance > WAYPOINT_PROXIMITY)
     {
       timer.update();
       //Serial.print(nav.getRelativeBearing()); 
       // Get the relative bearing to adjust the motors accordingly
-      controller.adjustHeading(nav.getRelativeBearing(), getSpeedFromDistance(distance));
+      relativeBearing = nav.getRelativeBearing(&headingDegrees); //heading degrees is passed as pointer reference to be able to set it from within the method
+      motorSpeed = getSpeedFromDistance(distance);
+      servoValue = controller.adjustHeading(relativeBearing, motorSpeed);
       
       #ifdef DEBUG
         //Serial.print("Distance: "); 
@@ -178,6 +178,23 @@ int getSpeedFromDistance(double distance) {
   if(distance >= 10)
     return 35;
   return 20;  
+}
+
+void sendBoatLiveData() {
+  String message = "LD:";
+  message += distance;
+  message += "|"; //value divider
+  message += headingDegrees; //HARDCODED HEADING FOR NOW
+  message += "|"; //value divider
+  message += relativeBearing;
+  message += "|"; //value divider
+  message += servoValue;
+  message += "|"; //value divider
+  message += motorSpeed;
+  message += "*"; //this char will say that the here the sent package ends, and the message can be processed
+  
+  Serial.println(message);
+  loRaMessenger.send(message); 
 }
 
 void sendLoRaData(void* context) {
