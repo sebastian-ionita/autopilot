@@ -11,8 +11,8 @@ LoRaMessenger loRaMessenger;
 void setup() {
   Serial.begin(9600);
   bluetoothModule.setup();
-  //loRaMessenger.begin();
-  //LoRa.onReceive(onReceive);
+  loRaMessenger.begin();
+  LoRa.onReceive(onReceive);
   Serial.println("Setup completed");
 }
 
@@ -25,7 +25,7 @@ void onReceive(int packetSize) {
   for (int i = 0; i < packetSize; i++) {
     message += (char)LoRa.read();
   }
-  message += "*";
+  //message += "*";
 
   Serial.print("Message to send: ");
   Serial.println(message);
@@ -51,7 +51,7 @@ void loop()
        sendBack = false;
   }*/
   
-  bluetoothModule.send("BL:44.953738, 18.624445*"); //1
+  /*bluetoothModule.send("BL:44.953738, 18.624445*"); //1
   delay(200);
   bluetoothModule.send("LD:102|NE|67|90|100*"); //1
   delay(200);
@@ -79,7 +79,7 @@ void loop()
   bluetoothModule.send("BL:44.953770, 18.624766*"); //6
   delay(200);
   bluetoothModule.send("LD:5|N|5|90|20*"); //1
-  delay(200);
+  delay(200);*/
 
   //bluetoothModule.send("Finished sending all the locations baby but this is a very long message to see what bluetooth can do here*"); //6
   

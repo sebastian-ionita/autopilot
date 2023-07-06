@@ -181,20 +181,27 @@ int getSpeedFromDistance(double distance) {
 }
 
 void sendBoatLiveData() {
-  String message = "LD:";
-  message += distance;
-  message += "|"; //value divider
-  message += headingDegrees; //HARDCODED HEADING FOR NOW
-  message += "|"; //value divider
-  message += relativeBearing;
-  message += "|"; //value divider
-  message += servoValue;
-  message += "|"; //value divider
-  message += motorSpeed;
-  message += "*"; //this char will say that the here the sent package ends, and the message can be processed
+  String liveLocation = "BL:";
+  liveLocation += String(nav.getLat(), 8);
+  liveLocation += ",";
+  liveLocation += String(nav.getLng(), 8);
+  liveLocation += "*";
+
+  loRaMessenger.send(liveLocation);
+
+  String liveData = "LD:";
+  liveData += distance;
+  liveData += "|"; //value divider
+  liveData += headingDegrees; //HARDCODED HEADING FOR NOW
+  liveData += "|"; //value divider
+  liveData += relativeBearing;
+  liveData += "|"; //value divider
+  liveData += servoValue;
+  liveData += "|"; //value divider
+  liveData += motorSpeed;
+  liveData += "*"; //this char will say that the here the sent package ends, and the message can be processed
   
-  Serial.println(message);
-  loRaMessenger.send(message); 
+  loRaMessenger.send(liveData); 
 }
 
 void sendLoRaData(void* context) {
