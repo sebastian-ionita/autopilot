@@ -64,6 +64,13 @@ class MessageHandlerService {
         var relativeBearing = params[2];
         var rudderPos = params[3];
         var motorSpeed = params[4];
+        var locationData = params[5];
+        //parse location
+        var locationParams = locationData.split(",");
+        var lat = locationParams[0];
+        var lng = locationParams[1];
+
+        appState.setBoatLocation(LatLng(double.parse(lat), double.parse(lng)));
         appState.setLiveData(
             distance, heading, relativeBearing, rudderPos, motorSpeed);
 

@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:print_color/print_color.dart';
 import 'package:smart_boat/services/secure_storage_service.dart';
 import 'boat_data.dart';
 import 'fishing_trip.dart';
@@ -11,7 +10,7 @@ class AppState extends ChangeNotifier {
   SecureStorageService secureStorageService = SecureStorageService();
 
   late LatLng? boatLocation;
-  late BoatData? boatLiveData;
+  late BoatData? boatLiveData = null;
   late List<FishingTrip> fishingTrips = [];
   late FishingTrip? selectedFishingTrip = null;
   late GoogleMapController mapController;

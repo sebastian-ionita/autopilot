@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
-import '../models/map_point.dart';
 
 class LiveDataWidget extends StatefulWidget {
   LiveDataWidget({Key? key}) : super(key: key);
@@ -13,12 +12,6 @@ class LiveDataWidget extends StatefulWidget {
 
 class _LiveDataWidgetState extends State<LiveDataWidget>
     with TickerProviderStateMixin {
-  final scaffoldKey = GlobalKey<ScaffoldState>();
-  late TextEditingController nameController;
-  late TabController tabController;
-  late Point home;
-  late List<Point> rodPoints = [];
-
   @override
   void initState() {
     super.initState();
@@ -60,7 +53,7 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           child: Row(
             children: [
               AText(type: ATextTypes.normal, text: "Point distance: "),
-              appState.boatLocation != null
+              appState.boatLiveData != null
                   ? AText(
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.distance)
@@ -73,7 +66,7 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           child: Row(
             children: [
               AText(type: ATextTypes.normal, text: "Heading: "),
-              appState.boatLocation != null
+              appState.boatLiveData != null
                   ? AText(
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.heading)
@@ -86,7 +79,7 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           child: Row(
             children: [
               AText(type: ATextTypes.normal, text: "Relative bearing: "),
-              appState.boatLocation != null
+              appState.boatLiveData != null
                   ? AText(
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.relativeBearing)
@@ -99,7 +92,7 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           child: Row(
             children: [
               AText(type: ATextTypes.normal, text: "Rudder position: "),
-              appState.boatLocation != null
+              appState.boatLiveData != null
                   ? AText(
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.rudderPosition)
@@ -112,7 +105,7 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           child: Row(
             children: [
               AText(type: ATextTypes.normal, text: "Main motor speed: "),
-              appState.boatLocation != null
+              appState.boatLiveData != null
                   ? AText(
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.motorSpeed)
