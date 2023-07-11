@@ -37,8 +37,10 @@ void LoRaMessenger::onReceive(int packetSize)
 
 void LoRaMessenger::send(String message)
 {
+  //noInterrupts();
   LoRa.beginPacket();
   LoRa.print(message);
-  LoRa.endPacket();
-  LoRa.receive();    
+  LoRa.endPacket(true);
+  LoRa.receive();  
+  //interrupts();  
 }
