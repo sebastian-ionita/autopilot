@@ -2,7 +2,6 @@
 
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
-#include "SmartBoat_Compass.h"
 
 //SoftwareSerial softSerial(8, 7); // These pins may change depending on what board you're using
 //Adafruit_GPS GPS(&softSerial);

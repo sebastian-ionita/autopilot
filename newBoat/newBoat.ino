@@ -4,7 +4,6 @@
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_HMC5883_U.h>
 #include <Wire.h>
 #include <Adafruit_PWMServoDriver.h>
 //#include <Adafruit_LSM303.h>

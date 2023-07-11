@@ -1,5 +1,4 @@
 #include <Wire.h>
-#include <DFRobot_QMC5883.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
 #include "SmartBoat_Compass.h"

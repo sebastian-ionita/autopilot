@@ -3,7 +3,6 @@
 #else
 #include "WProgram.h"
 #endif
-
 #include <Wire.h>
 #include "SmartBoat_Compass.h"
 

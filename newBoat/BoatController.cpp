@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "BoatController.h"
+#include "SmartBoat_Compass.h"
 #include <IBusBM.h>
 #include <Adafruit_PWMServoDriver.h>
 
