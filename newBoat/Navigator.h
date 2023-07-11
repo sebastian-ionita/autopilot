@@ -1,12 +1,8 @@
-//#include <Adafruit_GPS.h>
 #include <Wire.h>
-//#include <Adafruit_LSM303.h>
-
-
-//#include <Adafruit_Sensor.h>
-//#include <Adafruit_HMC5883_U.h>
 #include <DFRobot_QMC5883.h>
-//DFRobot_QMC5883 compass;
+#include <Adafruit_Sensor.h>
+#include <Adafruit_LSM303_U.h>
+#include "SmartBoat_Compass.h"
 
 #define MAGNETIC_DECLINATION 6.23f // Adjust for your area
 #define CALIBRATION 30 // You might need to adjust this if your compass readouts are as poopy as mine.
@@ -31,9 +27,9 @@ class Navigator
   bool hasFix();
   
   private:
-  //Adafruit_LSM303 lsm;
-  DFRobot_QMC5883 compass;
-  //Adafruit_HMC5883_Unified mag = Adafruit_HMC5883_Unified(12345);
+  //DFRobot_QMC5883 compass;
+  SmartBoat_Compass compass;
+  
   boolean usingInterrupt = false;
   double targetLat, targetLon;
 };

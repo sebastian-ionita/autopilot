@@ -1,17 +1,4 @@
 
-/* Dear hackers, makers, and engineers, 
-*
-*  Welcome!
-*
-*  This is a complete rewrite of the original code that drove my autopilot RC boat. When I wrote the first
-*  version, I never expected people would attempt to use it or understand it for use in their personal
-*  projects, so the code was very difficult and sloppy, and for that, I apologize. I hope you will find
-*  this version helpful and much easier to read. If you have any questions, feel free to shoot me an email
-*  at joefortune11@gmail.com. Best of luck to you in your projects!aaa
-*
-*  -Joseph Fortune 
-*/
-
 // Everything that was included in the other files had to also be included here to work for some reason
 //#include <Adafruit_GPS.h>
 #include <TinyGPS++.h>

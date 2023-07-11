@@ -2,6 +2,7 @@
 
 #include <TinyGPS++.h>
 #include <SoftwareSerial.h>
+#include "SmartBoat_Compass.h"
 
 //SoftwareSerial softSerial(8, 7); // These pins may change depending on what board you're using
 //Adafruit_GPS GPS(&softSerial);
@@ -59,26 +60,7 @@ void Navigator::begin(void)
   ss.begin(GPSBaud);
   useInterrupt(false);
   // *** Comapss ***
-  if(!compass.begin())
-  {
-    /* There was a problem detecting the HMC5883 ... check your connections */
-    Serial.println("Ooops, no HMC5883 detected ... Check your wiring!");
-    while(1);
-  }
-  if(compass.isHMC()){
-        Serial.println("Initialize HMC5883");
-        compass.setRange(HMC5883L_RANGE_1_3GA);
-        compass.setMeasurementMode(HMC5883L_CONTINOUS);
-        compass.setDataRate(HMC5883L_DATARATE_15HZ);
-        compass.setSamples(HMC5883L_SAMPLES_8);
-    }
-   else if(compass.isQMC()){
-        Serial.println("Initialize QMC5883");
-        compass.setRange(QMC5883_RANGE_2GA);
-        compass.setMeasurementMode(QMC5883_CONTINOUS); 
-        compass.setDataRate(QMC5883_DATARATE_50HZ);
-        compass.setSamples(QMC5883_SAMPLES_8);
-   }
+  compass.begin();
 
 }
 
@@ -127,7 +109,7 @@ void Navigator::setTarget(double lat, double lon)
  **********************************************/
 double Navigator::readCompass(void)
 {
-  Vector norm = compass.readNormalize();
+  Vector norm = compass.readAndCalibrate();
 
   // Calculate heading
   float heading = atan2(norm.YAxis, norm.XAxis);

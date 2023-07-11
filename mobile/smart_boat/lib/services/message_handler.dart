@@ -71,6 +71,7 @@ class MessageHandlerService {
         var lng = locationParams[1];
 
         appState.setBoatLocation(LatLng(double.parse(lat), double.parse(lng)));
+
         appState.setLiveData(
             distance, heading, relativeBearing, rudderPos, motorSpeed);
 
