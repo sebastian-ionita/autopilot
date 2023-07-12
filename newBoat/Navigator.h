@@ -24,10 +24,10 @@ class Navigator
   float getLng();
   double getRelativeBearing(double* headingValue);
   bool hasFix();
+  SmartBoat_Compass compass;
   
   private:
   //DFRobot_QMC5883 compass;
-  SmartBoat_Compass compass;
   
   boolean usingInterrupt = false;
   double targetLat, targetLon;

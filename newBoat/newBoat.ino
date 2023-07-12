@@ -23,7 +23,6 @@
 #include "Beeper.h"
 #include "LoRaMessenger.h"
 #include "Timer.h"
-#include "Storage.h"  
 
 // *** Macros ***
 //#define LEFT_ENGINE_PIN1 8
@@ -50,7 +49,7 @@ BoatController controller;
 Path path;
 Beeper beeper;
 LoRaMessenger loRaMessenger;
-Storage storage;
+//Storage storage;
 
 Timer timer;
 
@@ -63,11 +62,14 @@ double headingDegrees = 0;
 void setup()
 {
   
+  Serial.println("Setup started");
   wdt_enable(WDTO_8S);
   Serial.println("Setup started");
    
   loRaMessenger.begin();
+  
   nav.begin();
+  
   beeper.begin(BEEPER_PIN);
   controller.beginServo(); 
 
@@ -82,31 +84,25 @@ void setup()
   //path.addWaypoint(44.404811107531685, 26.103457001243456, SLOW);//tineretului ponton
   //path.addWaypoint(44.40499891489526, 26.103412999862424, SLOW);//tineretului ponton baza
   
-  //pinMode(LEFT_ENGINE_PIN1, OUTPUT); //IN3
-  //pinMode(RIGHT_ENGINE_PIN, OUTPUT); //IN4
-  //digitalWrite(LEFT_ENGINE_PIN1, HIGH);
-  //digitalWrite(RIGHT_ENGINE_PIN, HIGH);
   
   #ifdef DEBUG
-  Serial.begin(9600);
+    Serial.begin(9600);
   #endif
-  //beeper.beep3();
+  
   while(!nav.hasFix()) {
     wdt_reset();
     Serial.println("Waiting for fix...");
-    //beeper.beep(15);
-    //delay(1000);
   }
-  Serial.println("Got a GPS fix");
+  Serial.println("Got a GPS fix");  
   
-  beeper.beep3(); // A happy little 3 chirps to know we have fix
-  
-  
+  beeper.beep3(); // A happy little 3 chirps to know we have fix  
 
+  //calibrateCompass();
   //every 1 second, send boat live data to received on the mobile
-  //timer.every(1000, sendBoatLiveData, (void*)2);
+  timer.every(1000, sendBoatLiveData, (void*)4);
+  
 
-  Serial.println("Setup finished");
+  Serial.println("Setup finished");  
   
 }
 
@@ -118,6 +114,7 @@ void loop()
   // While we still have waypoints to reach
   while(path.hasWaypoints())
   {    
+    
     wdt_reset();
     timer.update();
 
@@ -174,7 +171,7 @@ int getSpeedFromDistance(double distance) {
   return 20;  
 }
 
-void sendBoatLiveData() {  
+void sendBoatLiveData(void* context) {  
   String liveData = "LD:";
   liveData += distance;
   liveData += "|"; //value divider
@@ -196,25 +193,8 @@ void sendBoatLiveData() {
 }
 
 
-void sendLoRaData(void* context) {
-  //controller.setControlSource();
-  //int pulseMicros = 1000;
-  //int servopin = 7;
-   //for(int i=0; i<2; i++) { //gets about 90 degrees movement, call twice or change i<16 to i<32 if 180 needed; set to 24 for 140;
-    //digitalWrite(servopin, HIGH);
-    //delayMicroseconds(pulseMicros);
-    //digitalWrite(servopin, LOW);
-    
-    //delayMicroseconds(pulseMicros);
-    //delay(25);
-  //}
-  //Serial.println(nav.getLat(), 8);
-  //String message = "BL:";
-  //message += String(nav.getLat(), 8);
-  //message += ",";
-  //message += String(nav.getLng(), 8) + "|";
-  //message += "D:";
-  //message += String(nav.getDistance());
-  //Serial.println(message);
-  //loRaMessenger.send(message);
+void calibrateCompass() {
+  beeper.beep(1000);
+  nav.compass.calibrate();
+  beeper.beep3();
 }
