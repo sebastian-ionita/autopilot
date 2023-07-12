@@ -1,5 +1,6 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_LSM303_U.h>
+#include "Storage.h"
 
 struct Vector
 {
@@ -11,27 +12,19 @@ struct Vector
 class SmartBoat_Compass
 {
 public:
-  SmartBoat_Compass(): minX(0), maxX(0), minY(0), maxY(0), minZ(0), maxZ(0), firstRun(true)
-    {}
-
   bool begin(void);
-
-  Vector readAutoCalibrated(void);
-  Vector readAndCalibrate(void);
-  
-  void initMinMax();
+  Vector read(void);  
   void calibrate(void);
-  void calibrateMagnetometer(float *offsetX, float *offsetY, float *offsetZ);
-  void setOffsets(float x, float y, float z);
+  void initMinMax();
+  void updateMinMax(sensors_event_t event);
 
   // Create an instance of the LSM303 sensor
   Adafruit_LSM303_Mag_Unified magnetometer = Adafruit_LSM303_Mag_Unified(12345);
 
 private:
-  Vector v, av;
-  Vector autocalibrationOffsets;
+  Vector v;
+  Storage storage;
   float minX, maxX;
   float minY, maxY;
   float minZ, maxZ;
-  bool firstRun;
 };

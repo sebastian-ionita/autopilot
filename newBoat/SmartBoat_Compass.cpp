@@ -1,10 +1,9 @@
-#if ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 #include <Wire.h>
 #include "SmartBoat_Compass.h"
+#include <avr/wdt.h>
+
+#define DEBUG // enable serial output for debugging
 
 bool SmartBoat_Compass::begin()
 {
@@ -16,126 +15,105 @@ bool SmartBoat_Compass::begin()
   }
 
   // Enable auto-ranging, defaults to +/- 1.3 gauss
-  magnetometer.enableAutoRange(true);
+  magnetometer.enableAutoRange(true);  
+  initMinMax();
 }
 
 void SmartBoat_Compass::calibrate()
 {
-  if(v.XAxis < minX ) minX = v.XAxis;
-  if(v.XAxis > maxX ) maxX = v.XAxis;
+  float minLX, maxLX;
+  float minLY, maxLY;
+  float minLZ, maxLZ;
 
-  if(v.YAxis < minY ) minY = v.YAxis;
-  if(v.YAxis > maxY ) maxY = v.YAxis;
+  sensors_event_t event;
+  magnetometer.getEvent(&event);
+  
+  minLX = maxLX = event.magnetic.x;
+  minLY = maxLY = event.magnetic.y;
+  minLZ = maxZ = event.magnetic.z;
 
-  if(v.ZAxis < minZ ) minZ = v.ZAxis;
-  if(v.ZAxis > maxZ ) maxZ = v.ZAxis;
+  #ifdef DEBUG
+    Serial.println("Start Calibration");
+  #endif
+  
+  for (int i = 0; i < 3000; i++) { // rotate compas on all 3 axes for 30s
+    wdt_reset();
+    magnetometer.getEvent(&event);
+    
+    if (event.magnetic.x < minLX) minLX = event.magnetic.x;
+    if (event.magnetic.x > maxLX) maxLX = event.magnetic.x;
+
+    if (event.magnetic.y < minLY) minLY = event.magnetic.y;
+    if (event.magnetic.y > maxLY) maxLY = event.magnetic.y;
+
+    if (event.magnetic.z < minLZ) minLZ = event.magnetic.z;
+    if (event.magnetic.z > maxLZ) maxLZ = event.magnetic.z;
+
+    delay(10);
+  }
+  storage.setCompassMinXCalibration(minLX);
+  storage.setCompassMaxXCalibration(maxLX);
+  
+  storage.setCompassMinYCalibration(minLY);
+  storage.setCompassMaxYCalibration(maxLY);
+  
+  storage.setCompassMinZCalibration(minLZ);
+  storage.setCompassMaxZCalibration(maxLZ);
+  
+  initMinMax();
+
+  #ifdef DEBUG
+    Serial.println("Calibrated Successfully");
+
+    Serial.print("MinX: ");
+    Serial.println(minLX);
+    Serial.print("MaxX: ");
+    Serial.println(maxLX);
+    
+    Serial.print("MinY: ");
+    Serial.println(minLY);
+    Serial.print("MaxY: ");
+    Serial.println(maxLY);
+    
+    Serial.print("MinZ: ");
+    Serial.println(minLZ);
+    Serial.print("MaxZ: ");
+    Serial.println(maxLZ);
+  #endif
 }
 
 void SmartBoat_Compass::initMinMax()
 {
-  minX = v.XAxis;
-  maxX = v.XAxis;
+  minX = storage.getCompassMinXCalibration();
+  maxX = storage.getCompassMaxXCalibration();
 
-  minY = v.YAxis;
-  maxY = v.YAxis;
+  minY = storage.getCompassMinYCalibration();
+  maxY = storage.getCompassMaxYCalibration();
 
-  minZ = v.ZAxis;
-  maxZ = v.ZAxis;
+  minZ = storage.getCompassMinZCalibration();
+  maxZ = storage.getCompassMaxZCalibration();
 }
 
-Vector SmartBoat_Compass::readAutoCalibrated(void)
-{
+void SmartBoat_Compass::updateMinMax(sensors_event_t event) {
+  if (event.magnetic.x < minX) minX = event.magnetic.x;
+  if (event.magnetic.x > maxX) maxX = event.magnetic.x;
 
-  sensors_event_t event;
-  magnetometer.getEvent(&event);
+  if (event.magnetic.y < minY) minY = event.magnetic.y;
+  if (event.magnetic.y > maxY) maxY = event.magnetic.y;
 
-  av.XAxis = event.magnetic.x - autocalibrationOffsets.XAxis;
-  av.YAxis = event.magnetic.y - autocalibrationOffsets.YAxis;
-  av.ZAxis = event.magnetic.z - autocalibrationOffsets.ZAxis;
-
-  return av;
+  if (event.magnetic.z < minZ) minZ = event.magnetic.z;
+  if (event.magnetic.z > maxZ) maxZ = event.magnetic.z;
 }
 
-Vector SmartBoat_Compass::readAndCalibrate(void)
+Vector SmartBoat_Compass::read(void)
 {
   sensors_event_t event;
   magnetometer.getEvent(&event);
-
-  int range = 10;
-  float Xsum = 0.0;
-  float Ysum = 0.0;
-  float Zsum = 0.0;
-  while (range--){
-    v.XAxis = event.magnetic.x;
-    v.YAxis = event.magnetic.y;
-    v.ZAxis = event.magnetic.z;
-    Xsum += v.XAxis;
-    Ysum += v.YAxis;
-    Zsum += v.ZAxis;
-  }
-  v.XAxis = Xsum/range;
-  v.YAxis = Ysum/range;
-  v.ZAxis = Zsum/range;
-  if(firstRun){
-    initMinMax();
-    firstRun = false;
-  }
-
-  calibrate();
-
-  v.XAxis= map(v.XAxis, minX, maxX, -360,360);
-  v.YAxis= map(v.YAxis, minY, maxY, -360,360);
-  v.ZAxis= map(v.ZAxis, minZ, maxZ, -360,360);
+  updateMinMax(event);
+  
+  v.XAxis= map(event.magnetic.x, minX, maxX, -360,360);
+  v.YAxis= map(event.magnetic.y, minY, maxY, -360,360);
+  v.ZAxis= map(event.magnetic.z, minZ, maxZ, -360,360);
 
   return v;
 }
-
-// Constants for auto-calibration
-const int CALIBRATION_SAMPLES = 250;
-const int CALIBRATION_DELAY_MS = 100;
-
-void SmartBoat_Compass::setOffsets(float offsetX, float offsetY, float offsetZ) {
-    autocalibrationOffsets.XAxis = offsetX;
-    autocalibrationOffsets.YAxis = offsetY;
-    autocalibrationOffsets.ZAxis = offsetZ;
-
-    Serial.println("Calibration offsets.");
-    Serial.print("X: ");
-    Serial.print(offsetX);
-    Serial.print(" Y: ");
-    Serial.print(offsetY);
-    Serial.print(" Z: ");
-    Serial.println(offsetZ);
-}
-
-void SmartBoat_Compass::calibrateMagnetometer(float *offsetX, float *offsetY, float *offsetZ)
-{
-  Serial.println("Auto - Calibrating magnetometer...");
-  
-  // Variables for summing calibration samples
-  float sumX = 0.0;
-  float sumY = 0.0;
-  float sumZ = 0.0;
-  
-  // Collect calibration samples
-  for (int i = 0; i < CALIBRATION_SAMPLES; i++)
-  {
-    sensors_event_t event;
-    magnetometer.getEvent(&event);
-    
-    sumX += event.magnetic.x;
-    sumY += event.magnetic.y;
-    sumZ += event.magnetic.z;
-    
-    delay(CALIBRATION_DELAY_MS);
-  }
-  
-  // Calculate calibration offsets
-  *offsetX = sumX / CALIBRATION_SAMPLES;
-  *offsetY = sumY / CALIBRATION_SAMPLES;
-  *offsetZ = sumZ / CALIBRATION_SAMPLES;
-  
-  Serial.println("Calibration complete.");
-}
-
-

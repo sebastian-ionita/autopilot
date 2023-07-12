@@ -108,7 +108,7 @@ void Navigator::setTarget(double lat, double lon)
  **********************************************/
 double Navigator::readCompass(void)
 {
-  Vector norm = compass.readAndCalibrate();
+  Vector norm = compass.read();
 
   // Calculate heading
   float heading = atan2(norm.YAxis, norm.XAxis);
