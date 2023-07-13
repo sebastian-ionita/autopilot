@@ -140,6 +140,7 @@ void loop()
     }    
     
     // Waypoint reached
+    loRaMessenger.send("INFO:Waypoint reached"); 
     #ifdef DEBUG
     Serial.println("\nWAYPOINT REACHED!!!");
     beeper.beep3();
