@@ -73,8 +73,9 @@ void setup()
   beeper.begin(BEEPER_PIN);
   controller.beginServo(); 
 
-  //path.addWaypoint(44.40137415624203, 26.097540411523457, SLOW);//vdf mega image
-  path.addWaypoint(44.40247667463061, 26.093612582007538, SLOW);//solca bariera
+  path.addWaypoint(44.40375040589921, 26.106770300233578, SLOW);
+  path.addWaypoint(44.404244863681654, 26.10776210470905, SLOW);
+  //path.addWaypoint(44.40247667463061, 26.093612582007538, SLOW);//solca bariera
   //path.addWaypoint(44.40271144491504, 26.094229880607987, SLOW); //solca casa drept terasa
   //path.addWaypoint(44.42718003495822, 26.092074449012067, SLOW); //constitutiei 1
   //path.addWaypoint(44.40502614603183, 26.102622364772053, SLOW); ///ac tineretului

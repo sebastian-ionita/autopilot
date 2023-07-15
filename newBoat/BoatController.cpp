@@ -44,7 +44,8 @@ void steer(int degrees) {
   // 90 degrees = 310
   // min 180
   // max 440
-  int pulseMicros = map(degrees, 0, 180, 180, 440);
+  //degrees = 85;
+  int pulseMicros = map(degrees+6, 0, 180, 180, 440);
   pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
 }
 
@@ -90,7 +91,7 @@ int BoatController::adjustHeading(double relativeBearing, int speed)
   double absRelativeBearing = abs(relativeBearing);
   int turnSpeed;
   
-  int servoValue = (180 - map(relativeBearing, -90, 90, 0, 180));
+  int servoValue = map(relativeBearing, -90, 90, 0, 180);
   
   #ifdef DEBUG
     Serial.print("relativeBearing");  
@@ -131,6 +132,8 @@ int BoatController::adjustHeading(double relativeBearing, int speed)
  **********************************************/
  void BoatController::stopEngines()
  {
+    externalControl = true;
+    digitalWrite(EXTERNAL_CONTROL, HIGH);
     #ifdef DEBUG
     Serial.println("Stopping");
     #endif
