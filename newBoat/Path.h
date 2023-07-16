@@ -3,18 +3,18 @@
 struct Waypoint
 {
   double lat, lon;
-  int speed;
 };
 
 class Path
 {
   public:
-  void addWaypoint(double lat, double lon, int speed);
+  void addWaypoint(double lat, double lon);
   double getLat(void);
   double getLon(void);
   int getSpeed(void);
   void nextWaypoint(void);
   bool hasWaypoints(void);
+  void clearWaypoints(void);
   
   private:
   Waypoint waypoints[MAX_WAYPOINTS];

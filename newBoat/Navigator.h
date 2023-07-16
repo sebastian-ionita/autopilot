@@ -26,9 +26,7 @@ class Navigator
   bool hasFix();
   SmartBoat_Compass compass;
   
-  private:
-  //DFRobot_QMC5883 compass;
-  
+  private:  
   boolean usingInterrupt = false;
   double targetLat, targetLon;
 };

@@ -14,6 +14,8 @@ boolean externalControl = true;
 
 uint8_t STEERING_CHANNEL = 0;
 uint8_t GAS_CHANNEL = 1;
+uint8_t RIGHT_LOAD = 2;
+uint8_t LEFT_LOAD = 3;
 
 /**********************************************
  * BoatController() - Constructor
@@ -38,6 +40,8 @@ int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue)
 void BoatController::beginServo(void) {  
   pwm.begin();
   pwm.setPWMFreq(50);
+  pwm.setPWM(RIGHT_LOAD, 0, 410);
+  pwm.setPWM(LEFT_LOAD, 0, 190);
 }
 
 void steer(int degrees) {  
@@ -45,15 +49,37 @@ void steer(int degrees) {
   // min 180
   // max 440
   //degrees = 85;
+  if(externalControl) {
+    return;
+  }
   int pulseMicros = map(degrees+6, 0, 180, 180, 440);
   pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
 }
 
-void gas(int speed) {
+void openRightLoad() {
   if(externalControl) {
     return;
   }
-  int translatedSpeed = map(speed, 0, 100, 310, 400); //translate input speed only to forward rotation;S3b@stianal
+   pwm.setPWM(RIGHT_LOAD, 0, 190);
+   delay(3000);
+   pwm.setPWM(RIGHT_LOAD, 0, 420);
+}
+
+
+void openLeftLoad() {
+  if(externalControl) {
+    return;
+  }
+  pwm.setPWM(LEFT_LOAD, 0, 420);
+  delay(3000);
+  pwm.setPWM(LEFT_LOAD, 0, 190);
+}
+
+void BoatController::gas() {
+  if(externalControl) {
+    return;
+  }
+  int translatedSpeed = map(speed, 0, 100, 310, 400); //translate input speed only to forward rotation;
   pwm.setPWM(GAS_CHANNEL, 0, translatedSpeed);
 }
 
@@ -99,17 +125,7 @@ int BoatController::adjustHeading(double relativeBearing, int speed)
   #endif 
   
   servoPosition(servoValue);
-  gas(speed);
-  
-  /* *** CALCULATE TURNSPEED ***
-   * In this first section we calculate what the turn speed should be. The further off course, the more one of
-   * the engines will be slowed to allow a smooth turn */
-  
-  //if (absRelativeBearing < 90)
-   // turnSpeed = speed * (1 - absRelativeBearing / 90);
-  //else
-  //  turnSpeed = 0; // Really sharp turn
-  
+  gas();  
  
   #ifdef DEBUG
   Serial.print("\nRelBearing: ");
@@ -125,16 +141,16 @@ int BoatController::adjustHeading(double relativeBearing, int speed)
   return servoValue;
 }
 
-
-/**********************************************
- * stopEngines()
- * I feel like this one is pretty obvious.
- **********************************************/
  void BoatController::stopEngines()
  {
     externalControl = true;
     digitalWrite(EXTERNAL_CONTROL, HIGH);
     #ifdef DEBUG
-    Serial.println("Stopping");
+      Serial.println("Stopping");
     #endif
+ }
+
+ void BoatController::setSpeed(int sp)
+ {
+    speed = sp;
  }

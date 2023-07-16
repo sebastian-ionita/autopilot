@@ -43,8 +43,8 @@ void Navigator::useInterrupt(boolean v)
   //else 
   //{
     // do not call the interrupt function COMPA anymore
-    //TIMSK0 &= ~_BV(OCIE0A);
-    //usingInterrupt = false;
+   //TIMSK0 &= ~_BV(OCIE0A);
+    usingInterrupt = false;
   //}
 }
 

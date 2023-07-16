@@ -2,11 +2,13 @@
 
 /*******************************************************************************************/
 
-void Path::addWaypoint(double lat, double lon, int speed)
+void Path::addWaypoint(double lat, double lon)
 {
+  if(store_index >= MAX_WAYPOINTS) {
+    return;
+  }
   waypoints[store_index].lat = lat;
   waypoints[store_index].lon = lon;
-  waypoints[store_index].speed = speed;
   store_index++;
 }
 
@@ -26,13 +28,6 @@ double Path::getLon()
 
 /*******************************************************************************************/
 
-int Path::getSpeed()
-{
-  return waypoints[running_index].speed;
-}
-
-/*******************************************************************************************/
-
 void Path::nextWaypoint()
 {
   running_index++;
@@ -43,4 +38,13 @@ void Path::nextWaypoint()
 bool Path::hasWaypoints()
 {
   return running_index < store_index;
+}
+
+void Path::clearWaypoints()
+{
+  store_index = 0;
+  running_index = 0;
+  for (int i = 0; i < MAX_WAYPOINTS; i++) {
+    waypoints[i] = {};
+  }
 }

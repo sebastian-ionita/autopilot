@@ -4,12 +4,13 @@
 
 /*******************************************************************************************/
 
-void LoRaMessenger::begin()
+void LoRaMessenger::begin(void (*onReceive)(int))
 {
   if (!LoRa.begin(433E6)) {             // initialize ratio at 915 MHz
     Serial.println("LoRa init failed. Check your connections.");
     while (true);                       // if failed, do nothing
   }
+  LoRa.setTxPower(20);
   LoRa.onReceive(onReceive);
   LoRa.receive();
   Serial.println("Lora initialized");

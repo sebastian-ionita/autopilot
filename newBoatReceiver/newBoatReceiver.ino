@@ -11,8 +11,7 @@ LoRaMessenger loRaMessenger;
 void setup() {
   Serial.begin(9600);
   bluetoothModule.setup();
-  loRaMessenger.begin();
-  LoRa.onReceive(onReceive);
+  loRaMessenger.begin(onReceive);
   Serial.println("Setup completed");
 }
 
