@@ -32,7 +32,8 @@ class _HomePageWidgetState extends State<HomePageWidget>
 
   void startListeningOnBluetooth(BleDeviceInteractor deviceInteractor,
       ConnectionStateUpdate bleConnectionStatus, AppState appState) {
-    var messageHandlerService = MessageHandlerService(appState: appState);
+    var messageHandlerService =
+        MessageHandlerService(appState: appState, context: context);
     if (!appState.listening) {
       deviceInteractor
           .discoverServices(bleConnectionStatus.deviceId)

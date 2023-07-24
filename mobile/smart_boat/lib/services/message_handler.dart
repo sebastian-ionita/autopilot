@@ -1,11 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:print_color/print_color.dart';
+import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
 class MessageHandlerService {
   AppState appState;
-  MessageHandlerService({required this.appState});
+  BuildContext context;
+  MessageHandlerService({required this.appState, required this.context});
 
   String receivedMessage = '';
 
@@ -46,6 +49,17 @@ class MessageHandlerService {
         var lng = params[1];
         appState.setBoatLocation(LatLng(double.parse(lat), double.parse(lng)));
         appState.refresh();
+      } catch (e) {
+        Print.red("Error on parsing BOAT LOCATION: $e");
+      }
+    } else if (messageToProcess.startsWith("INFO:")) {
+      //BOAT LOCATION
+      try {
+        Print.green(receivedMessage);
+        //boat location was received, update state property
+        messageToProcess = messageToProcess.replaceAll("INFO:", "");
+
+        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
       } catch (e) {
         Print.red("Error on parsing BOAT LOCATION: $e");
       }

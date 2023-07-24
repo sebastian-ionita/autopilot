@@ -41,7 +41,7 @@ class _ReceivedMessagesWidgetState extends State<ReceivedMessagesWidget> {
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: getMessagesList(appState.receivedMessages),
+                children: getMessagesList(appState.infoMessages),
               ),
             ),
           )

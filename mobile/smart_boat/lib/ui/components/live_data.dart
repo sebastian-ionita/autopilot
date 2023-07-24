@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_boat/ble/ble_device_interactor.dart';
+import 'package:smart_boat/services/message_sender.dart';
+import 'package:smart_boat/ui/base/AButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
@@ -24,7 +28,8 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<AppState>(builder: (_, appState, __) {
+    return Consumer3<AppState, BleDeviceInteractor, ConnectionStateUpdate>(
+        builder: (_, appState, deviceInteractor, connectionStateUpdate, __) {
       return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Padding(
           padding: const EdgeInsets.all(8.0),
@@ -110,6 +115,24 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
                       type: ATextTypes.normal,
                       text: appState.boatLiveData!.motorSpeed)
                   : const SizedBox(),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              AButton(
+                  type: AButtonTypes.primary,
+                  buttonText: "Send to bluetooth",
+                  onPressed: () async {
+                    var messageSenderService = MessageSenderService(
+                        appState: appState,
+                        deviceInteractor: deviceInteractor,
+                        connectionState: connectionStateUpdate);
+                    messageSenderService.sendMessage(
+                        "Sa traiasca nasisdfsdfsdbaaaaaa, something long here");
+                  })
             ],
           ),
         ),

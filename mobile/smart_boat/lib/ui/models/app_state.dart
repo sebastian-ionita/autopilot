@@ -15,10 +15,12 @@ class AppState extends ChangeNotifier {
   late FishingTrip? selectedFishingTrip = null;
   late GoogleMapController mapController;
   bool listening = false;
-  List<String> receivedMessages = [];
+  List<String> infoMessages = [];
 
   void addMessage(String message) {
-    receivedMessages.add(message);
+    infoMessages.add(message);
+    saveState();
+    notifyListeners();
   }
 
   void setGoogleMapController(GoogleMapController controller) {

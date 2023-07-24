@@ -35,6 +35,11 @@ void onReceive(int packetSize) {
 
 void loop()
 {
+  String received = bluetoothModule.read();
+  if(received != ""){
+   
+    Serial.println("Finished reception on bluetooth");
+  }
     // register the receive callback
   /*bool sendBack = false;
   String received = bluetoothModule.read();

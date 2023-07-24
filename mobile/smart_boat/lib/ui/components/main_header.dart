@@ -119,6 +119,16 @@ class _MainHeaderWidgetState extends State<MainHeaderWidget>
                   color: Colors.blue,
                   size: 20,
                 ),
+                onLongPressed: () async {
+                  await showModalBottomSheet(
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      context: context,
+                      builder: (context) {
+                        return const ABottomSheet(
+                            height: 600, child: ReceivedMessagesWidget());
+                      });
+                },
                 onPressed: () async {
                   //show list of devices
                   await showModalBottomSheet(
