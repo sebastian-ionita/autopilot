@@ -1,3 +1,4 @@
+import 'package:smart_boat/ui/models/routine.dart';
 import 'package:smart_boat/ui/models/trip_camera_position.dart';
 
 import 'map_point.dart';
@@ -7,12 +8,14 @@ class FishingTrip {
       {required this.name,
       required this.home,
       required this.rodPoints,
+      required this.routine,
       required this.mapPosition,
       required this.createdOn});
 
   late String name;
   late Point? home;
   late List<Point> rodPoints;
+  late Routine? routine;
   late DateTime createdOn;
   late TripCameraPosition? mapPosition;
 
@@ -27,6 +30,8 @@ class FishingTrip {
         mapPosition: json["mapPosition"] != null
             ? TripCameraPosition.fromJson(json["mapPosition"])
             : null,
+        routine:
+            json["routine"] != null ? Routine.fromJson(json["routine"]) : null,
         createdOn: DateTime.parse(json['createdOn']),
         home: json['home'] != null ? Point.fromJson(json['home']) : null,
         rodPoints: rodPoints);
@@ -40,6 +45,7 @@ class FishingTrip {
     return {
       'name': name,
       'mapPosition': mapPosition != null ? mapPosition!.toJson() : null,
+      'routine': routine != null ? routine!.toJson() : null,
       'home': home != null ? home!.toJson() : null,
       'rodPoints': rodPointsJson,
       'createdOn': createdOn.toIso8601String()

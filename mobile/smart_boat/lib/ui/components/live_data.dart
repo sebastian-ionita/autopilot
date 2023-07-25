@@ -130,8 +130,8 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
                         appState: appState,
                         deviceInteractor: deviceInteractor,
                         connectionState: connectionStateUpdate);
-                    messageSenderService.sendMessage(
-                        "Sa traiasca nasisdfsdfsdbaaaaaa, something long here");
+                    messageSenderService
+                        .sendMessage("WP:123.22@,33.44||1@,0-*");
                   })
             ],
           ),

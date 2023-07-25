@@ -3,6 +3,7 @@ import 'package:smart_boat/ui/base/AButton.dart';
 import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
+import 'package:smart_boat/ui/components/routine_config.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import '../base/ABottomSheet.dart';
 import '../base/AConfirmation.dart';
@@ -78,6 +79,7 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
           home: home,
           rodPoints: rodPoints,
           mapPosition: null,
+          routine: null,
           createdOn: DateTime.now().toLocal());
       widget.state.addFishingTrip(trip);
     } else {
@@ -320,7 +322,7 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
               )
             ],
           ),
-          const Center(child: Text('Routines tab')),
+          RoutineConfigWidget()
         ],
       ))
     ]);

@@ -5,6 +5,7 @@ import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 import 'package:smart_boat/ui/base/utils/controls_utils.dart';
+import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import '../../ble/ble_device_interactor.dart';
 import '../base/ABottomSheet.dart';
@@ -67,6 +68,11 @@ class _FishingTripPreviewWidgetState extends State<FishingTripPreviewWidget>
           selectFishingTrip(deviceInteractor, bleConnectionStatus);
         },
         onLongPress: () {
+          if (widget.state.selectedFishingTrip == null) {
+            Utils.showSnack(
+                SnackTypes.Error, "Please select fishing trip first", context);
+            return;
+          }
           showModalBottomSheet(
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
@@ -148,8 +154,11 @@ class _FishingTripPreviewWidgetState extends State<FishingTripPreviewWidget>
                               if (index == 0) {
                                 // Static element
                                 return AIconButton(
-                                  borderColor: SmartBoatTheme.of(context)
-                                      .primaryBackground,
+                                  borderColor:
+                                      widget.fishingTrip?.home?.location != null
+                                          ? Colors.green
+                                          : SmartBoatTheme.of(context)
+                                              .primaryBackground,
                                   borderRadius: 10,
                                   fillColor: SmartBoatTheme.of(context)
                                       .primaryBackground,

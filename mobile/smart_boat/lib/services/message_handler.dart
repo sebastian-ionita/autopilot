@@ -37,11 +37,22 @@ class MessageHandlerService {
         "[${formatter.format(DateTime.now().toLocal())}] $messageToProcess");
 
     //package finished sending, handle the message and make receive message null
-    Print.green(messageToProcess);
-    if (messageToProcess.startsWith("BL:")) {
+    //Print.green(messageToProcess);
+    if (messageToProcess.startsWith("N:")) {
+      try {
+        //boat location was received, update state property
+        messageToProcess = messageToProcess.replaceAll("N:", "");
+        //show notification
+        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
+
+        appState.refresh();
+      } catch (e) {
+        Print.red("Error on handling notification message: $e");
+      }
+    } else if (messageToProcess.startsWith("BL:")) {
       //BOAT LOCATION
       try {
-        Print.green(receivedMessage);
+        //Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("BL:", "");
         var params = messageToProcess.split(",");
@@ -55,7 +66,7 @@ class MessageHandlerService {
     } else if (messageToProcess.startsWith("INFO:")) {
       //BOAT LOCATION
       try {
-        Print.green(receivedMessage);
+        //Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("INFO:", "");
 
