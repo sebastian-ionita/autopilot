@@ -35,7 +35,7 @@ void Bluetooth::setup()
   bluetooth.write("AT+NAMEFishingBoat"); //set name
   delay(200);
 
-  bluetooth.write("AT+RELI0"); 
+  bluetooth.write("AT+RELI1"); 
   delay(200);
 
   bluetooth.write("AT+SHOW1");
@@ -53,14 +53,11 @@ void Bluetooth::setup()
 
 String Bluetooth::read()
 {
+  String message = "";
   while(bluetooth.available()){
-    String received = (String)bluetooth.readString();
-    Serial.print("Received from bluetooth: ");
-    Serial.println(received);
-
-    return received;
-  }
-  return "";
+    message += bluetooth.readString();
+  }  
+  return message;
 }
 
 
@@ -68,6 +65,3 @@ void Bluetooth::send(String toSend)
 {
   bluetooth.print(toSend); // send data over characteristic   
 }
-
-
-

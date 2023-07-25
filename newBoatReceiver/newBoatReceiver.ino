@@ -3,6 +3,7 @@
 #include <string.h>
 #include "Bluetooth.h"
 #include "LoRaMessenger.h"
+#include <avr/wdt.h>
 
 
 Bluetooth bluetoothModule;
@@ -13,6 +14,7 @@ void setup() {
   bluetoothModule.setup();
   loRaMessenger.begin(onReceive);
   Serial.println("Setup completed");
+  wdt_enable(WDTO_8S);
 }
 
 void onReceive(int packetSize) {
@@ -35,56 +37,29 @@ void onReceive(int packetSize) {
 
 void loop()
 {
+  wdt_reset();
   String received = bluetoothModule.read();
   if(received != ""){
-   
-    Serial.println("Finished reception on bluetooth");
-  }
-    // register the receive callback
-  /*bool sendBack = false;
-  String received = bluetoothModule.read();
-  if(received != ""){
-    if(received.startsWith("SB:")){
-      sendBack = true;
+    Serial.println("------");
+    Serial.println(received);
+    Serial.println("------");
+    //String received2 = bluetoothModule.read();
+    //Serial.print("Extra:");
+    //Serial.println(received2);
+    int prevIndex = 0;
+    int currentIndex;
+    while ((currentIndex = received.indexOf('*', prevIndex)) != -1) {  // Find the next *
+      Serial.println(received.substring(prevIndex, currentIndex));  // Extract and print the substring
+      loRaMessenger.send(received.substring(prevIndex, currentIndex) + "*");
+      prevIndex = currentIndex + 1;  // Update the previous index to the current index
+      delay(500);
     }
-    Serial.println("Finished reception on bluetooth");
+    
+    loRaMessenger.send(received.substring(prevIndex) + "*");
+    Serial.println("------");
+    //Serial.println(received.substring(prevIndex));
+    //loRaMessenger.send(p);
+    //Serial.println("Finished reception on bluetooth");
   }
-  if(sendBack){
-       Serial.println("Sending data back");
-       bluetoothModule.send("Send back");
-       sendBack = false;
-  }*/
-  
-  /*bluetoothModule.send("BL:44.953738, 18.624445*"); //1
-  delay(200);
-  bluetoothModule.send("LD:102|NE|67|90|100*"); //1
-  delay(200);
-
-  bluetoothModule.send("BL:44.953952, 18.624230*"); //2
-  delay(200);
-  bluetoothModule.send("LD:85|NE|55|85|100*"); //1
-  delay(200);
-
-  bluetoothModule.send("BL:44.954193, 18.624285*"); //3
-  delay(200);
-  bluetoothModule.send("LD:70|NE|45|70|100*"); //1
-  delay(200);
-
-  bluetoothModule.send("BL:44.954224, 18.624820*"); //4
-  delay(200);
-  bluetoothModule.send("LD:40|N|30|90|100*"); //1
-  delay(200);
-
-  bluetoothModule.send("BL:44.953936, 18.625225*"); //5
-  delay(200);
-  bluetoothModule.send("LD:27|N|15|90|60*"); //1
-  delay(200);
-
-  bluetoothModule.send("BL:44.953770, 18.624766*"); //6
-  delay(200);
-  bluetoothModule.send("LD:5|N|5|90|20*"); //1
-  delay(200);*/
-
-  //bluetoothModule.send("Finished sending all the locations baby but this is a very long message to see what bluetooth can do here*"); //6
   
 }

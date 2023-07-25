@@ -118,11 +118,13 @@ int LoRaMessenger::parseInt(String message, const String startMarker, const Stri
 LoraLatLong LoRaMessenger::parseLatLong(String message, String startMarker) {
   String delimiter = "@,";
   String tankDelimiter = "||";
+  String indexDelimiter = "##";
   LoraLatLong result = {
     lat: 0.00,
     lng: 0.00,
     tankLeft: -1,
-    tankRight: -1
+    tankRight: -1,
+    index: -1
   };
   
   int startIndex = message.indexOf(startMarker); // Find the start marker
@@ -170,15 +172,19 @@ LoraLatLong LoRaMessenger::parseLatLong(String message, String startMarker) {
     }
   }
 
+  //WP:123.22@,33.44||1@,0##1-*
+
   String secondMessage = message.substring(endIndex, message.length());
   int tank1 = parseInt(secondMessage, tankDelimiter, delimiter);
-  int tank2 = parseInt(secondMessage, delimiter, endMarker);
-  if(tank1 ==-1 || tank2 == -1) {
+  int tank2 = parseInt(secondMessage, delimiter, indexDelimiter);
+  int index = parseInt(secondMessage, indexDelimiter, endMarker);
+  if(tank1 ==-1 || tank2 == -1 || index == -1) {
       LoraLatLong resultDefault = {
       lat: 0.00,
       lng: 0.00,
       tankLeft: -1,
-      tankRight: -1
+      tankRight: -1,
+      index: -1
     };
     return resultDefault;
   }
@@ -186,6 +192,7 @@ LoraLatLong LoRaMessenger::parseLatLong(String message, String startMarker) {
 
   result.tankLeft = tank1;
   result.tankRight = tank2;
+  result.index = index;
   
   return result;
 }
