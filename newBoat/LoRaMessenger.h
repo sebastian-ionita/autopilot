@@ -6,6 +6,7 @@ struct LoraLatLong {
   double lng;
   int tankLeft;
   int tankRight;
+  int index;
 };
 
 class LoRaMessenger
@@ -20,7 +21,8 @@ class LoRaMessenger
   
   const String endMarker = "-*";
   const String CALIBRATE_MESSAGE = "*1*";
-  const String CLEAR_WAYPOINTS_MESSAGE = "*2*";
+  const String CLEAR_WAYPOINTS_MESSAGE = "CLEARWP*";
+  const String REQUEST_WAYPOINTS_MESSAGE = "*3*";
   const String ADD_WAYPOINT_MESSAGE = "WP:";
   const String SET_SPEED_MESSAGE = "SP:";
   

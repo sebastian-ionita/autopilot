@@ -16,8 +16,9 @@ void Path::addWaypoint(double lat, double lon, int tankLeft, int tankRight, int 
   waypoints[index].lon = lon;
   waypoints[index].tankLeft = tankLeft;
   waypoints[index].tankRight = tankRight;
-  if(store_index < index) {
-    store_index = index;
+
+  if(store_index <= index) {
+    store_index = index + 1;
   }
 }
 

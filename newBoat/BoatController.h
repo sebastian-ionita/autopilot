@@ -13,7 +13,7 @@ class BoatController
   static void unloadAllTanks(void);
 
   private:
-  int speed = 80;
+  int speed = 100;
   int signalSpeed = 100;
   void gas(void);
   static void openRightTank();
