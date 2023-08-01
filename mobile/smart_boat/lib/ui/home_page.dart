@@ -41,7 +41,7 @@ class _HomePageWidgetState extends State<HomePageWidget>
         for (var s in discoveredServices) {
           if (s.characteristics.isNotEmpty) {
             for (var c in s.characteristics) {
-              if (c.isWritableWithoutResponse) {
+              if (c.isWritableWithoutResponse && c.isReadable) {
                 deviceInteractor
                     .subScribeToCharacteristic(QualifiedCharacteristic(
                         characteristicId: c.characteristicId,

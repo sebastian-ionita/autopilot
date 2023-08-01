@@ -196,7 +196,8 @@ class _MainHeaderWidgetState extends State<MainHeaderWidget>
                             height: 200,
                             child: AConfirmation(
                                 confirm: () async {
-                                  deviceConnector.disconnect(bleState.deviceId);
+                                  deviceConnector.disconnect(
+                                      bleState.deviceId, appState);
                                   appState.setListening(false);
                                   Utils.showSnack(
                                       SnackTypes.Info,

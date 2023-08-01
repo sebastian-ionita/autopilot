@@ -1,4 +1,3 @@
-
 #include <Arduino.h>
 
 class Bluetooth
@@ -7,6 +6,6 @@ class Bluetooth
   SoftwareSerial getInstance();
   void setup();
   String read(void);
+  String readString(void);
   void send(String toSend);
-  
 };

@@ -22,7 +22,10 @@ class _ReceivedMessagesWidgetState extends State<ReceivedMessagesWidget> {
 
   List<Widget> getMessagesList(List<String> messages) {
     return messages
-        .map((e) => AText(type: ATextTypes.small, text: e))
+        .asMap()
+        .entries
+        .map((entry) => AText(
+            type: ATextTypes.small, text: "[${entry.key}] - ${entry.value}"))
         .toList()
         .reversed
         .toList();

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:print_color/print_color.dart';
 import 'package:smart_boat/ble/reactive_state.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
@@ -38,10 +39,11 @@ class BleDeviceConnector extends ReactiveState<ConnectionStateUpdate> {
     );
   }
 
-  Future<void> disconnect(String deviceId) async {
+  Future<void> disconnect(String deviceId, AppState appState) async {
     try {
       _logMessage('disconnecting to device: $deviceId');
       await _connection.cancel();
+      appState.setSelectedFishingTrip(null);
     } on Exception catch (e, _) {
       _logMessage("Error disconnecting from a device: $e");
     } finally {

@@ -68,7 +68,7 @@ class AppState extends ChangeNotifier {
     saveState();
   }
 
-  void setSelectedFishingTrip(FishingTrip trip) {
+  void setSelectedFishingTrip(FishingTrip? trip) {
     selectedFishingTrip = trip;
 
     if (selectedFishingTrip != null) {

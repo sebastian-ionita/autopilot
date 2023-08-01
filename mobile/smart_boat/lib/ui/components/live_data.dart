@@ -16,6 +16,7 @@ class LiveDataWidget extends StatefulWidget {
 
 class _LiveDataWidgetState extends State<LiveDataWidget>
     with TickerProviderStateMixin {
+  int counter = 0;
   @override
   void initState() {
     super.initState();
@@ -130,8 +131,12 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
                         appState: appState,
                         deviceInteractor: deviceInteractor,
                         connectionState: connectionStateUpdate);
-                    messageSenderService
-                        .sendMessage("WP:123.22@,33.44||1@,0-*");
+                    await messageSenderService.initializeSendCharacteristic();
+                    await messageSenderService.sendMessage(
+                        "$counter Small message but a bit bigger that the other requesteddf ffsd f sf ssdfsd END EVEN A BIGGER ONE SMFM");
+                    setState(() {
+                      counter = counter + 1;
+                    });
                   })
             ],
           ),

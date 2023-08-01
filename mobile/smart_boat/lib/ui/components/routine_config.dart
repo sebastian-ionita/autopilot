@@ -92,17 +92,13 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
         connectionState: connectionState);
     await messageSender.initializeSendCharacteristic();
 
-    await messageSender.sendMessage("CLEARWP*\n");
-    await Future.delayed(const Duration(milliseconds: 20));
-
     var steps = state.selectedFishingTrip!.routine!.steps;
     for (int i = 0; i < steps.length; i++) {
       var wayPointMessage =
-          "WP:${steps[i].point!.latitude.toStringAsFixed(6)}@,${steps[i].point!.longitude.toStringAsFixed(6)}||${steps[i].unloadLeft ? "1" : "0"}@,${steps[i].unloadRight ? "1" : "0"}##$i-*\n";
+          "WP:${steps[i].point!.latitude.toStringAsFixed(6)}@,${steps[i].point!.longitude.toStringAsFixed(6)}||${steps[i].unloadLeft ? "1" : "0"}@,${steps[i].unloadRight ? "1" : "0"}##$i-*";
       Print.magenta(wayPointMessage);
 
       await messageSender.sendMessage(wayPointMessage);
-      await Future.delayed(const Duration(milliseconds: 20));
     }
   }
 
@@ -179,9 +175,64 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
                                   await sendRoutine(appState, deviceInteractor,
                                       connectionStatus);
                                 }),
+                            const SizedBox(width: 5),
+                            AButton(
+                                type: AButtonTypes.primary,
+                                buttonText: "Clear WP",
+                                onPressed: () async {
+                                  //send boat routine
+                                  var messageSenderService =
+                                      MessageSenderService(
+                                          appState: appState,
+                                          deviceInteractor: deviceInteractor,
+                                          connectionState: connectionStatus);
+
+                                  await messageSenderService
+                                      .initializeSendCharacteristic();
+                                  await messageSenderService
+                                      .sendMessage("CLEARWP*");
+                                }),
                           ],
                         ),
-                      )
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(0.0),
+                        child: Row(
+                          children: [
+                            AButton(
+                                type: AButtonTypes.primary,
+                                buttonText: "Check boat points",
+                                onPressed: () async {
+                                  var messageSenderService =
+                                      MessageSenderService(
+                                          appState: appState,
+                                          deviceInteractor: deviceInteractor,
+                                          connectionState: connectionStatus);
+
+                                  await messageSenderService
+                                      .initializeSendCharacteristic();
+                                  await messageSenderService
+                                      .sendMessage("GETWP*");
+                                }),
+                            const SizedBox(width: 5),
+                            AButton(
+                                type: AButtonTypes.primary,
+                                buttonText: "Restart",
+                                onPressed: () async {
+                                  var messageSenderService =
+                                      MessageSenderService(
+                                          appState: appState,
+                                          deviceInteractor: deviceInteractor,
+                                          connectionState: connectionStatus);
+
+                                  await messageSenderService
+                                      .initializeSendCharacteristic();
+                                  await messageSenderService
+                                      .sendMessage("RESET*");
+                                }),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 )

@@ -5,6 +5,9 @@ import 'package:print_color/print_color.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
+const int XON = 0x11; // ASCII code for XON (Resume transmission)
+const int XOFF = 0x13; // ASCII code for XOFF (Pause transmission)
+
 class MessageHandlerService {
   AppState appState;
   BuildContext context;
@@ -14,6 +17,13 @@ class MessageHandlerService {
 
   void onMessageReceived(List<int> messageBytes) {
     var message = String.fromCharCodes(messageBytes);
+    if (message.contains(String.fromCharCode(XON))) {
+      Print.red("Resume data transmission");
+      // Resume data transmission
+      // Implement any necessary actions here
+    } else if (message.contains(String.fromCharCode(XOFF))) {
+      Print.red("Pause data transmission");
+    }
 
     if (message.endsWith("*")) {
       receivedMessage += message;
@@ -37,7 +47,7 @@ class MessageHandlerService {
         "[${formatter.format(DateTime.now().toLocal())}] $messageToProcess");
 
     //package finished sending, handle the message and make receive message null
-    //Print.green(messageToProcess);
+    Print.green(messageToProcess);
     if (messageToProcess.startsWith("N:")) {
       try {
         //boat location was received, update state property
@@ -69,6 +79,17 @@ class MessageHandlerService {
         //Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("INFO:", "");
+
+        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
+      } catch (e) {
+        Print.red("Error on parsing BOAT LOCATION: $e");
+      }
+    } else if (messageToProcess.startsWith("SW:")) {
+      //BOAT LOCATION
+      try {
+        //Print.green(receivedMessage);
+        //boat location was received, update state property
+        messageToProcess = messageToProcess.replaceAll("SW:", "");
 
         Utils.showSnack(SnackTypes.Info, messageToProcess, context);
       } catch (e) {
