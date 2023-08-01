@@ -111,6 +111,7 @@ void Navigator::setTarget(double lat, double lon)
 double Navigator::readCompass(void)
 {
   Vector norm = compass.read();
+  VectorAccel cAccel = compass.readAccel();
 
   //original implementation
   //float heading = atan2(norm.YAxis, norm.XAxis) * 180 / 3.14159265359;
@@ -121,22 +122,38 @@ double Navigator::readCompass(void)
   //return heading;
 
   // Calculate heading
-  float heading = atan2(norm.YAxis, norm.XAxis);  
 
-  // Set declination angle on your location and fix heading
-  //float declinationAngle = (6.0 + (13.0 / 60.0)) / (180 / PI);
-  //heading += declinationAngle;
 
-  // Correct for heading < 0deg and heading > 360deg
-  if (heading < 0){
-    heading += 2 * PI;
-  }
-  if (heading > 2 * PI){
-    heading -= 2 * PI;
-  }
+  // Roll & Pitch Estimation
+  float roll = atan2(cAccel.YAxis, cAccel.ZAxis);
+  float pitch = atan2(-cAccel.XAxis, sqrt(cAccel.YAxis * cAccel.YAxis + cAccel.ZAxis * cAccel.ZAxis));
+  
+  // Tilt compensated Magnetic filed X
+  float Tilt_Compensated_X = norm.XAxis * cos(pitch) + norm.ZAxis * sin(pitch);
+  // Tilt compensated Magnetic filed Y
+  float Tilt_Compensated_Y = norm.XAxis * sin(roll) * sin(pitch) + norm.YAxis * cos(roll) - norm.ZAxis * sin(roll) * cos(pitch);
+  
+  // Magnetic Heading
+  float heading = atan2(norm.YAxis, norm.XAxis);
+  
+  // Adjust heading based on your location declination
+  float declinationAngle = MAGNETIC_DECLINATION * (M_PI / 180);  // Convert declination from degrees to radians
 
+// Assuming heading was calculated with atan2 and is in radians
+  heading += declinationAngle;
+  
+  // Correct for reversed heading
+  if(heading < 0)
+    heading += 2*PI;
+    
+  // Check for wrap and compensate
+  if(heading > 2*PI)
+    heading -= 2*PI;
+  
   // Convert to degrees
   float headingDegrees = heading * 180/M_PI; 
+
+  //Serial.println(headingDegrees);
   return headingDegrees;
   
 }
@@ -154,6 +171,10 @@ float Navigator::getLng() {
     return testData[runningTestIndex].lng;
   #endif
   return gps.location.lng();
+}
+
+void Navigator::setCompassCalibration(int c) {
+  CALIBRATION = c;
 }
 
 /**********************************************
@@ -183,7 +204,7 @@ double Navigator::getRelativeBearing(double* headingValue)
 
   // Relative bearing
   //double relativeBearing = headingDegrees - bearing + CALIBRATION;
-  double relativeBearing = headingDegrees - bearing + MAGNETIC_DECLINATION + CALIBRATION;
+  double relativeBearing = headingDegrees - bearing + CALIBRATION;
   
   // Normalize such that the front of the boat reresents 0 degrees, and left is negative
   if (relativeBearing > 180)

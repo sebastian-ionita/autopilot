@@ -1,4 +1,4 @@
-#include "libraries/Timer-2.1/Timer.h"
+#include "Timer.h"
 #define MAX_WAYPOINTS 20
 
 struct Waypoint
@@ -10,10 +10,11 @@ struct Waypoint
 class Path
 {
   public:
-  void addWaypoint(double lat, double lon, int tankLeft, int tankRight);
+  void addWaypoint(double lat, double lon, int tankLeft, int tankRight, int index);
   double getLat(void);
   double getLon(void);
   int getSpeed(void);
+  int getRunningIndex(void);  
   void nextWaypoint(
     void (*leftTankAction)(void), 
     void (*rightTankAction)(void), 
@@ -23,6 +24,7 @@ class Path
     );
   bool hasWaypoints(void);
   void clearWaypoints(void);
+  String getWaypointsMessage(void);
   
   private:
   int WAIT_AFTER_TANK_UNLOAD = 3000;

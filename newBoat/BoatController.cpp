@@ -12,7 +12,7 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 //#define DEBUG // enable serial output for debugging
 #define EXTERNAL_CONTROL 8
 #define OPEN_TANK_DURATION 5000
-#define STEERING_CALIBRATION 0
+#define STEERING_CALIBRATION -3
 
 boolean externalControl = true;
 boolean enginesEnabled = true;
@@ -50,6 +50,7 @@ void steer(int degrees) {
   if(externalControl) {
     return;
   }
+  //degrees = 90;
   int pulseMicros = map(degrees + STEERING_CALIBRATION, 0, 180, 180, 440);
   pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
 }

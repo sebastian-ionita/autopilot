@@ -8,7 +8,7 @@
 bool SmartBoat_Compass::begin()
 {
   // Initialize the magnetometer
-  if (!magnetometer.begin())
+  if (!magnetometer.begin() || !accel.begin())
   {
     Serial.println("Failed to initialize the LSM303 magnetometer!");
     while (1);
@@ -30,11 +30,11 @@ void SmartBoat_Compass::calibrate()
   
   minLX = maxLX = event.magnetic.x;
   minLY = maxLY = event.magnetic.y;
-  minLZ = maxZ = event.magnetic.z;
+  minLZ = maxLZ = event.magnetic.z;
 
-  #ifdef DEBUG
+  //#ifdef DEBUG
     Serial.println("Start Calibration");
-  #endif
+ // #endif
   
   for (int i = 0; i < 3000; i++) { // rotate compas on all 3 axes for 30s
     wdt_reset();
@@ -116,4 +116,17 @@ Vector SmartBoat_Compass::read(void)
   v.ZAxis= map(event.magnetic.z, minZ, maxZ, -360,360);
 
   return v;
+}
+
+VectorAccel SmartBoat_Compass::readAccel(void)
+{
+  sensors_event_t event;
+  accel.getEvent(&event);
+  //updateMinMax(event);
+  
+  vAccel.XAxis = event.acceleration.x;
+  vAccel.YAxis = event.acceleration.y;
+  vAccel.ZAxis = event.acceleration.z;
+
+  return vAccel;
 }

@@ -50,11 +50,13 @@ void setup()
   controller.beginServo(); 
   controller.startEngines();
 
-  //path.addWaypoint(44.40476466439481, 26.106513105501197, 1, 1); //test path1
+
+  //path.addWaypoint(44.96401865891598, 24.89437097537398, 1, 1, 0); //test path1
+  //path.addWaypoint(44.963730194840515, 24.893402308225465, 1, 1, 1); //test path1
   //path.addWaypoint(44.404753960198214, 26.10668608266575, 1, 0);//test path2
-  path.addWaypoint(44.40507764703135, 26.10763937205082, 0, 1); // Daimon dreapta
-  path.addWaypoint(44.404646468815955, 26.10735369565071, 1, 0); // Daimon stanga
-  path.addWaypoint(44.404611109453214, 26.108126680998154, 0, 0); // Daimon home
+  //path.addWaypoint(44.40507764703135, 26.10763937205082, 0, 1, 0); // Daimon dreapta
+  //path.addWaypoint(44.404646468815955, 26.10735369565071, 1, 0, 1); // Daimon stanga
+  //path.addWaypoint(44.404611109453214, 26.108126680998154, 0, 0, 2); // Daimon home
 
   #ifdef WAIT_FIX
     while(!nav.hasFix()) {
@@ -68,11 +70,15 @@ void setup()
 
   //every 1 second, send boat live data to received on the mobile
   timer.every(1000, sendBoatLiveData, (void*)4);
-  //timer.after(3000, addWaypoint, (void*)0);
+  //timer.after(3000, sendBoatLiveData, (void*)0);
   //timer.after(3200, addWaypoint2, (void*)0);
   //timer.after(3000, nextWaypoint, (void*)0);
   //timer.after(6000, nextWaypoint, (void*)0);
   //timer.after(13000, nextWaypoint, (void*)0);
+  
+  //beeper.beep(1000);
+  //nav.compass.calibrate();
+  //beeper.beep3();
   
 
   Serial.println("Setup finished");  
@@ -132,7 +138,7 @@ void loop()
     }    
     
     // Waypoint reached
-    loRaMessenger.send("INFO:Waypoint reached"); 
+    loRaMessenger.send("N:Waypoint reached"); 
     nextWaypoint(0);
     #ifdef DEBUG
     Serial.println("\nWAYPOINT REACHED!!!");
@@ -161,7 +167,7 @@ int getSpeedFromDistance(double distance) {
 
 void addWaypoint(void* context) {  
   Serial.println("Add waypoint");
-  path.addWaypoint(44.40533550476172, 26.107248736699017, 0, 1);
+  //path.addWaypoint(44.40533550476172, 26.107248736699017, 0, 1);
   //LoraLatLong coordinates = loRaMessenger.parseLatLong("WP:123.22@,33.44||1@,0-*", loRaMessenger.ADD_WAYPOINT_MESSAGE);
   //path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight);
 
@@ -170,7 +176,7 @@ void addWaypoint(void* context) {
 void addWaypoint2(void* context) {  
   Serial.println("Add waypoint");
   
-  path.addWaypoint(44.404753960198214, 26.10668608266575, 1, 0);//test path
+  //path.addWaypoint(44.404753960198214, 26.10668608266575, 1, 0);//test path
   //LoraLatLong coordinates = loRaMessenger.parseLatLong("WP:123.22@,33.44||0@,1-*", loRaMessenger.ADD_WAYPOINT_MESSAGE);
   //path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight);
 
@@ -202,12 +208,16 @@ void sendBoatLiveData(void* context) {
   liveData += String(nav.getLat(), 8);
   liveData += ",";
   liveData += String(nav.getLng(), 8);
+  liveData += "|"; //value divider
+  liveData += String(path.getRunningIndex()); //value divider
   liveData += "*"; //this char will say that the here the sent package ends, and the message can be processed
   Serial.println(liveData);
 
+  
+
   loRaMessenger.send(liveData); 
 }
-
+void(* reset) (void) = 0;
 
 void onReceiveLora(int packetSize)
 {
@@ -234,6 +244,26 @@ void onReceiveLora(int packetSize)
     path.clearWaypoints();
   }
   
+  if(message == loRaMessenger.REQUEST_WAYPOINTS) {
+    Serial.println("REQUEST_WAYPOINTS");
+    //beeper.beep(500);
+    loRaMessenger.send(path.getWaypointsMessage()); 
+    
+  }
+  
+  
+  if(message == loRaMessenger.REQUEST_WAYPOINTS_MESSAGE) {
+    Serial.println("REQUEST_WAYPOINTS_MESSAGE");
+    loRaMessenger.send(path.getWaypointsMessage());
+    beeper.beep(500);
+    
+  }
+
+  if(message == loRaMessenger.RESET_MESSAGE) {
+    Serial.println("Reset");
+    reset();    
+  }
+  
   if(message.indexOf(loRaMessenger.SET_SPEED_MESSAGE) >= 0) {
     Serial.println("SET_SPEED_MESSAGE");
     int speed = loRaMessenger.parseInt(message, loRaMessenger.SET_SPEED_MESSAGE);
@@ -243,13 +273,22 @@ void onReceiveLora(int packetSize)
     }    
   }
   
+  
+  if(message.indexOf(loRaMessenger.SET_CALIBRATION_MESSAGE) >= 0) {
+    Serial.println("SET_CALIBRATION_MESSAGE");
+    int c = loRaMessenger.parseInt(message, loRaMessenger.SET_CALIBRATION_MESSAGE);
+    if(c != -1) {
+      beeper.beep(500);
+      nav.setCompassCalibration(c);
+    }    
+  }
+  
   if(message.indexOf(loRaMessenger.ADD_WAYPOINT_MESSAGE) >= 0) {
     Serial.println("ADD_WAYPOINT_MESSAGE");
     LoraLatLong coordinates = loRaMessenger.parseLatLong(message, loRaMessenger.ADD_WAYPOINT_MESSAGE);
     if(coordinates.lat != 0.00 && coordinates.lng != 0.00) {
       beeper.beep(500);
-      path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight);
+      path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight, coordinates.index);
     }
-  }
-  
+  }  
 }

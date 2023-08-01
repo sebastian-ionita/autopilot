@@ -1,22 +1,36 @@
 #include <Arduino.h>
 #include "Path.h"
-#include "libraries/Timer-2.1/Timer.h"
+#include "Timer.h"
 
 /*******************************************************************************************/
 
 int Path::running_index = 0;
 
-void Path::addWaypoint(double lat, double lon, int tankLeft, int tankRight)
+void Path::addWaypoint(double lat, double lon, int tankLeft, int tankRight, int index)
 {
   if(store_index >= MAX_WAYPOINTS) {
     return;
   }
   //Serial.println("added");
-  waypoints[store_index].lat = lat;
-  waypoints[store_index].lon = lon;
-  waypoints[store_index].tankLeft = tankLeft;
-  waypoints[store_index].tankRight = tankRight;
-  store_index++;
+  waypoints[index].lat = lat;
+  waypoints[index].lon = lon;
+  waypoints[index].tankLeft = tankLeft;
+  waypoints[index].tankRight = tankRight;
+
+  if(store_index <= index) {
+    store_index = index + 1;
+  }
+}
+
+String Path::getWaypointsMessage() {
+  // SW:<index>|<leftTank>|<rightTank>@<index>|<leftTank>|<rightTank>@*
+  String message = "SW:";
+  for (int i = 0; i < MAX_WAYPOINTS; i++) {
+    if(waypoints[i].lat != 0.00 && waypoints[i].tankLeft != -1) {
+      message += String(i) + "|" + String(waypoints[i].tankLeft) + "|" + String(waypoints[i].tankRight) + "@";
+    }
+  }
+  return message += "*";
 }
 
 /*******************************************************************************************/
@@ -79,4 +93,9 @@ void Path::clearWaypoints()
   for (int i = 0; i < MAX_WAYPOINTS; i++) {
     waypoints[i] = {};
   }
+}
+
+int Path::getRunningIndex()
+{
+  return running_index;  
 }
