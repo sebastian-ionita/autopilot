@@ -6,7 +6,7 @@
 #define MAGNETIC_DECLINATION 6.27 // Bucuresti
 //#define MAGNETIC_DECLINATION 6.2 // Pitesti
 //#define MAGNETIC_DECLINATION 5.19 // Zabar
-#define CALIBRATION 0 // You might need to adjust this if your compass readouts are as poopy as mine.
+//#define CALIBRATION 0 // You might need to adjust this if your compass readouts are as poopy as mine.
 #define WAYPOINT_PROXIMITY 5
 
 struct TestLatLong {
@@ -22,6 +22,8 @@ class Navigator
   void useInterrupt(boolean v);
   double getDistance(void);
   void setTarget(double lat, double lon);
+  
+  void setCompassCalibration(int t);
   double readCompass(void);
   float getLat();
   float getLng();
@@ -32,6 +34,7 @@ class Navigator
   private:  
   boolean usingInterrupt = false;
   double targetLat, targetLon;
+  int CALIBRATION = 0;
   TestLatLong testData[18];
   int runningTestIndex = 0;
 };

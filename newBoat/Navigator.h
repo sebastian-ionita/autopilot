@@ -34,7 +34,7 @@ class Navigator
   private:  
   boolean usingInterrupt = false;
   double targetLat, targetLon;
-  int CALIBRATION = 10;
+  int CALIBRATION = 0;
   TestLatLong testData[18];
   int runningTestIndex = 0;
 };
