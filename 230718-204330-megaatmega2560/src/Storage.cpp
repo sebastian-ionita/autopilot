@@ -2,14 +2,20 @@
 #include <Arduino.h>
 #include "Storage.h"
 
-#define COMPASS_MINX_ADDRESS 0
-#define COMPASS_MAXX_ADDRESS 1
+#define COMPASS_AX_ADDRESS 0
+#define COMPASS_AY_ADDRESS 1
+#define COMPASS_AZ_ADDRESS 2
 
-#define COMPASS_MINY_ADDRESS 2
-#define COMPASS_MAXY_ADDRESS 3
+#define COMPASS_MX_ADDRESS 3
+#define COMPASS_MY_ADDRESS 4
+#define COMPASS_MZ_ADDRESS 5
 
-#define COMPASS_MINZ_ADDRESS 4
-#define COMPASS_MAXZ_ADDRESS 5
+#define COMPASS_GX_ADDRESS 6
+#define COMPASS_GY_ADDRESS 7
+#define COMPASS_GZ_ADDRESS 8
+
+#define COMPASS_AR_ADDRESS 9
+#define COMPASS_MR_ADDRESS 10
 
 
 int getDoubleByteAddress(int address) {
@@ -30,41 +36,37 @@ double Storage::read(int address) {
   return EEPROM.readDouble(byteAddress);
 }
 
+void Storage::setCompassCalibration(adafruit_bno055_offsets_t &calibrationData) {
+  store(COMPASS_AX_ADDRESS, calibrationData.accel_offset_x);
+  store(COMPASS_AY_ADDRESS, calibrationData.accel_offset_y);
+  store(COMPASS_AZ_ADDRESS, calibrationData.accel_offset_z);
+  
+  store(COMPASS_MX_ADDRESS, calibrationData.mag_offset_x);
+  store(COMPASS_MY_ADDRESS, calibrationData.mag_offset_y);
+  store(COMPASS_MZ_ADDRESS, calibrationData.mag_offset_z);
+  
+  store(COMPASS_GX_ADDRESS, calibrationData.gyro_offset_x);
+  store(COMPASS_GY_ADDRESS, calibrationData.gyro_offset_y);
+  store(COMPASS_GZ_ADDRESS, calibrationData.gyro_offset_z);
 
-double Storage::getCompassMinXCalibration() {
-  return read(COMPASS_MINX_ADDRESS);
-}
-double Storage::getCompassMaxXCalibration() {
-  return read(COMPASS_MAXX_ADDRESS);
-}
-double Storage::getCompassMinYCalibration() {
-  return read(COMPASS_MINY_ADDRESS);
-} 
-double Storage::getCompassMaxYCalibration() {
-  return read(COMPASS_MAXY_ADDRESS);
-}
-double Storage::getCompassMinZCalibration() {
-  return read(COMPASS_MINZ_ADDRESS);
-} 
-double Storage::getCompassMaxZCalibration() {
-  return read(COMPASS_MAXZ_ADDRESS);
+  store(COMPASS_AR_ADDRESS, calibrationData.accel_radius);
+  store(COMPASS_MR_ADDRESS, calibrationData.mag_radius);
 }
 
-void Storage::setCompassMinXCalibration(double value) {
-  store(COMPASS_MINX_ADDRESS, value);
-}
-void Storage::setCompassMaxXCalibration(double value) {  
-  store(COMPASS_MAXX_ADDRESS, value);
-}
-void Storage::setCompassMinYCalibration(double value) {
-  store(COMPASS_MINY_ADDRESS, value);
-}
-void Storage::setCompassMaxYCalibration(double value) {
-  store(COMPASS_MAXY_ADDRESS, value);
-}
-void Storage::setCompassMinZCalibration(double value) {
-  store(COMPASS_MINZ_ADDRESS, value);
-}
-void Storage::setCompassMaxZCalibration(double value) {
-  store(COMPASS_MAXZ_ADDRESS, value);
+
+void Storage::getCompassCalibration(adafruit_bno055_offsets_t *calibrationData) {
+  calibrationData->accel_offset_x = read(COMPASS_AX_ADDRESS);
+  calibrationData->accel_offset_y = read(COMPASS_AY_ADDRESS);
+  calibrationData->accel_offset_z = read(COMPASS_AZ_ADDRESS);
+  
+  calibrationData->mag_offset_x = read(COMPASS_MX_ADDRESS);
+  calibrationData->mag_offset_y = read(COMPASS_MY_ADDRESS);
+  calibrationData->mag_offset_z = read(COMPASS_MZ_ADDRESS);
+  
+  calibrationData->gyro_offset_x = read(COMPASS_GX_ADDRESS);
+  calibrationData->gyro_offset_y = read(COMPASS_GY_ADDRESS);
+  calibrationData->gyro_offset_z = read(COMPASS_GZ_ADDRESS);
+  
+  calibrationData->accel_radius = read(COMPASS_AR_ADDRESS);
+  calibrationData->mag_radius = read(COMPASS_MR_ADDRESS);
 }

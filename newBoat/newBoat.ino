@@ -51,7 +51,7 @@ void setup()
   controller.startEngines();
 
 
-  //path.addWaypoint(44.96401865891598, 24.89437097537398, 1, 1, 0); //test path1
+  path.addWaypoint(44.96401865891598, 24.89437097537398, 1, 1, 0); //test path1
   //path.addWaypoint(44.963730194840515, 24.893402308225465, 1, 1, 1); //test path1
   //path.addWaypoint(44.404753960198214, 26.10668608266575, 1, 0);//test path2
   //path.addWaypoint(44.40507764703135, 26.10763937205082, 0, 1, 0); // Daimon dreapta
@@ -67,7 +67,7 @@ void setup()
   Serial.println("Got a GPS fix");  
   
   beeper.beep3(); // A happy little 3 chirps to know we have fix  
-
+  //nav.compass.calibrate();  
   //every 1 second, send boat live data to received on the mobile
   timer.every(1000, sendBoatLiveData, (void*)4);
   //timer.after(3000, sendBoatLiveData, (void*)0);
@@ -76,8 +76,7 @@ void setup()
   //timer.after(6000, nextWaypoint, (void*)0);
   //timer.after(13000, nextWaypoint, (void*)0);
   
-  //beeper.beep(1000);
-  //nav.compass.calibrate();
+  //beeper.beep(1000);  
   //beeper.beep3();
   
 

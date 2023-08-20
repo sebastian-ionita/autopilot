@@ -1,23 +1,12 @@
 #include <EEPROMex.h>
+#include <Adafruit_BNO055.h>
 
 class Storage
 {
   public:
-  double read(int address);
-  
-  double getCompassMinXCalibration(); 
-  double getCompassMaxXCalibration();
-  double getCompassMinYCalibration(); 
-  double getCompassMaxYCalibration();
-  double getCompassMinZCalibration(); 
-  double getCompassMaxZCalibration();
-
-  void setCompassMinXCalibration(double value); 
-  void setCompassMaxXCalibration(double value);
-  void setCompassMinYCalibration(double value); 
-  void setCompassMaxYCalibration(double value);
-  void setCompassMinZCalibration(double value); 
-  void setCompassMaxZCalibration(double value);
+  double read(int address);  
+  void setCompassCalibration(adafruit_bno055_offsets_t &calibrationData);
+  void getCompassCalibration(adafruit_bno055_offsets_t *calibrationData);
 
   private:
   void store(int address, double data);  
