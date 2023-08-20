@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/ADropdown/ADropdown.dart';
 import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
-import 'package:smart_boat/ui/models/fishing_trip.dart';
 import 'package:smart_boat/ui/models/routine.dart';
 
 import '../base/theme.dart';
@@ -74,46 +73,81 @@ class _RoutineStepWidgetState extends State<RoutineStepWidget> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (_, appState, __) {
       return Container(
-          decoration: const BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
+          decoration: BoxDecoration(
+              border: Border.all(
+                color: widget.step.stored
+                    ? SmartBoatTheme.of(context).primaryButtonColor
+                    : Colors.transparent,
+              ),
+              borderRadius: const BorderRadius.all(Radius.circular(10)),
               color: Colors.grey),
           padding: const EdgeInsets.all(15),
           margin: const EdgeInsets.all(5),
-          child:
+          child: Column(
+            children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            SizedBox(
-                width: 100,
-                child: AText(type: ATextTypes.small, text: widget.step.name)),
-            SizedBox(
-              width: 170,
-              child: ADropdown<int>(
-                  options: getPointOptions(appState),
-                  hintText: "Select..",
-                  initialOption: null,
-                  onChanged: (item) {
-                    if (item != null) {
-                      setStepBasedOnSelectedItem(appState, item);
-                      //update step point and name with the values from selected in the ddl
+                SizedBox(
+                    width: 100,
+                    child:
+                        AText(type: ATextTypes.small, text: widget.step.name)),
+                SizedBox(
+                  width: 170,
+                  child: ADropdown<int>(
+                      options: getPointOptions(appState),
+                      hintText: "Select..",
+                      initialOption: null,
+                      onChanged: (item) {
+                        if (item != null) {
+                          setStepBasedOnSelectedItem(appState, item);
+                          //update step point and name with the values from selected in the ddl
+                        }
+                      }),
+                ),
+                AIconButton(
+                  borderColor: Colors.green,
+                  borderRadius: 10,
+                  fillColor: SmartBoatTheme.of(context).primaryBackground,
+                  borderWidth: 1,
+                  icon: Icon(
+                    Icons.remove,
+                    color: SmartBoatTheme.of(context).primaryText,
+                    size: 20,
+                  ),
+                  onPressed: () async {
+                    if (widget.removeCallback != null) {
+                      widget.removeCallback!(widget.index);
                     }
-                  }),
-            ),
-            AIconButton(
-              borderColor: Colors.green,
-              borderRadius: 10,
-              fillColor: SmartBoatTheme.of(context).primaryBackground,
-              borderWidth: 1,
-              icon: Icon(
-                Icons.remove,
-                color: SmartBoatTheme.of(context).primaryText,
-                size: 20,
-              ),
-              onPressed: () async {
-                if (widget.removeCallback != null) {
-                  widget.removeCallback!(widget.index);
-                }
-              },
-            )
-          ]));
+                  },
+                )
+              ]),
+              Row(children: [
+                AText(type: ATextTypes.small, text: "Left"),
+                Checkbox(
+                  checkColor: Colors.white,
+                  value: widget.step.unloadLeft,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      widget.step.unloadLeft = value!;
+                    });
+                    appState.saveState();
+                    appState.refresh();
+                  },
+                ),
+                AText(type: ATextTypes.small, text: "Right"),
+                Checkbox(
+                  checkColor: Colors.white,
+                  value: widget.step.unloadRight,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      widget.step.unloadRight = value!;
+                    });
+                    appState.saveState();
+                    appState.refresh();
+                  },
+                ),
+              ]),
+            ],
+          ));
     });
   }
 }

@@ -42,7 +42,6 @@ void loop()
     Serial.print(" ------> ");
 
     loRaMessenger.send(received);
-    Serial.println("Sent to lora");
   }
 }
 

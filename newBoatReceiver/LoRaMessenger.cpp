@@ -36,10 +36,45 @@ void LoRaMessenger::onReceive(int packetSize)
 
 /*******************************************************************************************/
 
+
+const char XON = 0x11; // ASCII code for XON (Resume transmission)
+const char XOFF = 0x13; // ASCII code for XOFF (Pause transmission)
+
+void askStopTransmission(){
+  //send XOFF to stop boat transmission
+  for(int i=0; i < 5; i++){
+    LoRa.beginPacket();
+    LoRa.print("XOFF*");
+    LoRa.endPacket();
+  }
+  LoRa.receive();  
+  Serial.println("Asked boat to STOP Lora trsnamission");
+}
+
+void askStartTransmission(){
+  //send XON to start boat transmission
+  for(int i=0; i < 5; i++){
+    LoRa.beginPacket();
+    LoRa.print("XON*");
+    LoRa.endPacket();
+  }
+  LoRa.receive();  
+
+  Serial.println("Asked boat to START Lora trsnamission");
+}
+
 void LoRaMessenger::send(String message)
 {
+  //askStopTransmission();
+
   LoRa.beginPacket();
   LoRa.print(message);
   LoRa.endPacket();
+
+  Serial.print("Sent via lora: ");
+  Serial.println(message);
+
   LoRa.receive();    
+
+  //askStartTransmission();
 }
