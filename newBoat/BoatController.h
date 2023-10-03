@@ -6,6 +6,7 @@ class BoatController
   static void stopEngines(void);
   static void startEngines(void);
   void beginServo(void);
+  void setCourseStabilisation(bool active);
   void setSpeed(int sp);
   void update(void);
   static void unloadLeftTank(void);
@@ -19,5 +20,5 @@ class BoatController
   static void openRightTank();
   static void closeRightTank();
   static void openLeftTank();
-  static void closeLeftTank();
+  static void closeLeftTank();  
 };

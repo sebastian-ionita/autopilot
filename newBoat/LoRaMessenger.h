@@ -18,6 +18,7 @@ class LoRaMessenger
   int parseInt(String message, String startMarker);
   int parseInt(String message, String startMarker, String endMarker);
   LoraLatLong parseLatLong(String message, String startMarker);
+  bool canSendLiveData = false;
   
   const String endMarker = "-*";
   const String CALIBRATE_MESSAGE = "CALIBRATE*";
@@ -27,6 +28,11 @@ class LoRaMessenger
   const String SET_CALIBRATION_MESSAGE = "SC:";
   const String SET_SPEED_MESSAGE = "SP:";  
   const String REQUEST_WAYPOINTS = "GETWP*";  
-  const String RESET_MESSAGE = "RESET*";
+  const String RESET_MESSAGE = "RESET*";  
+  const String XON = "XON*";   
+  const String XOFF = "XOFF*";  
+  const String REQUEST_DATA = "GETD*";
+  const String START = "START*";
+  const String STOP = "STOP*";
   
 };
