@@ -222,7 +222,7 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
             },
             markers: getStateMarkers(appState),
             zoomControlsEnabled: false,
-            myLocationButtonEnabled: false,
+            //myLocationButtonEnabled: false,
             onLongPress: (LatLng location) {
               onLongPressMap(location, appState);
             },

@@ -66,12 +66,15 @@ class MessageSenderService {
         data.codeUnits);
   }
 
-  Future<void> sendMessage(String messageToSend) async {
+  Future<void> sendMessage(String messageToSend,
+      {bool stopTransmission = true}) async {
     if (service != null && characteristic != null) {
       messageToSend = "[$messageToSend]";
-      await writeData(String.fromCharCode(
-          XOFF)); //send to arduino that it should stop sending data
-      await Future.delayed(const Duration(milliseconds: 500));
+      if (stopTransmission) {
+        await writeData(String.fromCharCode(
+            XOFF)); //send to arduino that it should stop sending data
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
       //split message into multiple messages
       var messages = splitMessage(messageToSend);
       for (var m in messages) {
@@ -81,42 +84,12 @@ class MessageSenderService {
         await writeData(m);
         await Future.delayed(const Duration(milliseconds: 300));
       }
-      await writeData(String.fromCharCode(XON));
-      await Future.delayed(const Duration(milliseconds: 500));
+      if (stopTransmission) {
+        await writeData(String.fromCharCode(XON));
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
     } else {
       Print.red("Characteristic is null");
-    }
-  }
-
-  Future<void> sendMessageOld(String messageToSend) async {
-    var discoveredServices =
-        await deviceInteractor.discoverServices(connectionState.deviceId);
-    for (var s in discoveredServices) {
-      if (s.characteristics.isNotEmpty) {
-        for (var c in s.characteristics) {
-          if (c.isWritableWithoutResponse) {
-            var qualifiedCharacteristic = QualifiedCharacteristic(
-                characteristicId: c.characteristicId,
-                serviceId: s.serviceId,
-                deviceId: connectionState.deviceId);
-
-            if (!messageToSend.endsWith("*")) {
-              messageToSend += "*"; //add end control char if not already set
-            }
-
-            //split message into multiple messages
-            var messages = splitMessage(messageToSend);
-            for (var m in messages) {
-              deviceInteractor.writeCharacterisiticWithoutResponse(
-                  qualifiedCharacteristic, m.codeUnits);
-
-              //Print.red(m);
-            }
-
-            //end check
-          }
-        }
-      }
     }
   }
 }

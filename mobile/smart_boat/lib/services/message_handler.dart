@@ -87,13 +87,15 @@ class MessageHandlerService {
     } else if (messageToProcess.startsWith("SW:")) {
       //BOAT LOCATION
       try {
-        //Print.green(receivedMessage);
+        Print.green(messageToProcess);
         //boat location was received, update state property
-        messageToProcess = messageToProcess.replaceAll("SW:", "");
+        var validationMessage = messageToProcess.replaceAll("SW:", "");
+        appState.selectedFishingTrip!.routine!
+            .validateSteps(appState, validationMessage);
 
         Utils.showSnack(SnackTypes.Info, messageToProcess, context);
       } catch (e) {
-        Print.red("Error on parsing BOAT LOCATION: $e");
+        Print.red("Error on parsing BOAT POINTS: $e");
       }
     } else if (messageToProcess.startsWith("LD:")) {
       //LIVE BOAT DATA

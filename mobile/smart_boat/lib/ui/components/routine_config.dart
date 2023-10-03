@@ -54,12 +54,14 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
       RoutineStep(
           index: null,
           name: '',
+          stored: false,
           unloadLeft: false,
           unloadRight: false,
           point: null),
       RoutineStep(
           index: null,
           name: 'Home',
+          stored: false,
           unloadLeft: false,
           unloadRight: false,
           point: fishingTrip.home!.location),
@@ -76,6 +78,7 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
         index: null,
         name: '',
         unloadLeft: false,
+        stored: false,
         unloadRight: false,
         point: null));
     state.saveState();
@@ -86,19 +89,16 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
 
   Future<void> sendRoutine(AppState state, BleDeviceInteractor deviceInteractor,
       ConnectionStateUpdate connectionState) async {
-    var messageSender = MessageSenderService(
-        appState: state,
-        deviceInteractor: deviceInteractor,
-        connectionState: connectionState);
-    await messageSender.initializeSendCharacteristic();
-
-    var steps = state.selectedFishingTrip!.routine!.steps;
-    for (int i = 0; i < steps.length; i++) {
-      var wayPointMessage =
-          "WP:${steps[i].point!.latitude.toStringAsFixed(6)}@,${steps[i].point!.longitude.toStringAsFixed(6)}||${steps[i].unloadLeft ? "1" : "0"}@,${steps[i].unloadRight ? "1" : "0"}##$i-*";
-      Print.magenta(wayPointMessage);
-
-      await messageSender.sendMessage(wayPointMessage);
+    if (state.selectedFishingTrip!.routine != null) {
+      //set points stored flag to false
+      for (var element in state.selectedFishingTrip!.routine!.steps) {
+        element.stored = false;
+      }
+      state.saveState();
+      state.refresh();
+      //send new routine
+      await state.selectedFishingTrip!.routine!
+          .sendRoutine(state, deviceInteractor, connectionState);
     }
   }
 
@@ -139,6 +139,48 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
               ? Expanded(
                   child: Column(
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.all(0.0),
+                        child: Row(
+                          children: [
+                            AButton(
+                                type: AButtonTypes.primary,
+                                buttonText: "XOFF",
+                                onPressed: () async {
+                                  var messageSenderService =
+                                      MessageSenderService(
+                                          appState: appState,
+                                          deviceInteractor: deviceInteractor,
+                                          connectionState: connectionStatus);
+
+                                  await messageSenderService
+                                      .initializeSendCharacteristic();
+                                  for (int i = 0; i < 3; i++) {
+                                    await messageSenderService
+                                        .sendMessage("XOFF*");
+                                  }
+                                }),
+                            const SizedBox(width: 5),
+                            AButton(
+                                type: AButtonTypes.primary,
+                                buttonText: "XON",
+                                onPressed: () async {
+                                  var messageSenderService =
+                                      MessageSenderService(
+                                          appState: appState,
+                                          deviceInteractor: deviceInteractor,
+                                          connectionState: connectionStatus);
+
+                                  await messageSenderService
+                                      .initializeSendCharacteristic();
+                                  for (int i = 0; i < 3; i++) {
+                                    await messageSenderService
+                                        .sendMessage("XON*");
+                                  }
+                                }),
+                          ],
+                        ),
+                      ),
                       Expanded(
                         child: SingleChildScrollView(
                           child: Column(
@@ -178,7 +220,7 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
                             const SizedBox(width: 5),
                             AButton(
                                 type: AButtonTypes.primary,
-                                buttonText: "Clear WP",
+                                buttonText: "STOP",
                                 onPressed: () async {
                                   //send boat routine
                                   var messageSenderService =
@@ -190,7 +232,7 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
                                   await messageSenderService
                                       .initializeSendCharacteristic();
                                   await messageSenderService
-                                      .sendMessage("CLEARWP*");
+                                      .sendMessage("STOP*");
                                 }),
                           ],
                         ),
@@ -211,13 +253,14 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
 
                                   await messageSenderService
                                       .initializeSendCharacteristic();
-                                  await messageSenderService
-                                      .sendMessage("GETWP*");
+                                  await messageSenderService.sendMessage(
+                                      "GETWP*",
+                                      stopTransmission: false);
                                 }),
                             const SizedBox(width: 5),
                             AButton(
                                 type: AButtonTypes.primary,
-                                buttonText: "Restart",
+                                buttonText: "START",
                                 onPressed: () async {
                                   var messageSenderService =
                                       MessageSenderService(
@@ -228,7 +271,7 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
                                   await messageSenderService
                                       .initializeSendCharacteristic();
                                   await messageSenderService
-                                      .sendMessage("RESET*");
+                                      .sendMessage("START*");
                                 }),
                           ],
                         ),
