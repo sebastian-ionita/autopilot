@@ -4,10 +4,12 @@
 #include <IBusBM.h>
 #include <avr/wdt.h>
 #include <Adafruit_PWMServoDriver.h>
+#include "Timer.h"
 
 HardwareSerial& ibusRcSerial = Serial1;
 IBusBM ibusRc;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+Timer controllerTimer;
 
 //#define DEBUG // enable serial output for debugging
 #define EXTERNAL_CONTROL 8
@@ -16,6 +18,8 @@ Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 
 boolean externalControl = true;
 boolean enginesEnabled = true;
+boolean isAdjustingCourse = false;
+boolean isStabilisingCourse = false;
 uint8_t STEERING_CHANNEL = 0;
 uint8_t GAS_CHANNEL = 1;
 uint8_t RIGHT_LOAD = 2;
@@ -34,7 +38,6 @@ int readChannel(byte channelInput, int minLimit, int maxLimit, int defaultValue)
   return map(ch, 1000, 2000, minLimit, maxLimit);
 }
 
-
 void BoatController::beginServo(void) {  
   pwm.begin();
   pwm.setPWMFreq(50);
@@ -42,7 +45,7 @@ void BoatController::beginServo(void) {
   closeLeftTank();
 }
 
-void steer(int degrees) {  
+void steer(void* degrees) {  
   // 90 degrees = 310
   // min 180
   // max 440
@@ -50,9 +53,52 @@ void steer(int degrees) {
   if(externalControl) {
     return;
   }
+  if(isStabilisingCourse) {
+    degrees = 90;
+  }
   //degrees = 90;
-  int pulseMicros = map(degrees + STEERING_CALIBRATION, 0, 180, 180, 440);
+  //Serial.println(degrees);
+  int pulseMicros = map((int)degrees + STEERING_CALIBRATION, 0, 180, 180, 440);
   pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
+}
+
+void setCourseEnded(void* context) { 
+  isAdjustingCourse = false;
+}
+
+int getSteeringDuration(int degrees) {
+  int translatedDegrees = 0;
+  if(degrees - 90 > 0) {
+    translatedDegrees = degrees - 90;
+  } else {
+    translatedDegrees = 90 - degrees;
+  }
+
+  return 500;
+
+  if(translatedDegrees < 50) {
+    return 500;
+  }
+  
+  if(translatedDegrees < 70) {
+    return 1000;
+  }
+  return 2000;
+}
+
+void adjustCourse(int degrees) {
+  if(isAdjustingCourse) {
+    return;
+  }
+  isAdjustingCourse = true; 
+  int waitToSteer = getSteeringDuration(degrees);
+  steer((void*)degrees);
+  controllerTimer.after(waitToSteer, steer, (void*)90);
+  controllerTimer.after(waitToSteer + 1000, setCourseEnded, (void*)1);
+}
+
+void BoatController::setCourseStabilisation(bool active) {
+  isStabilisingCourse = active;
 }
 
 void BoatController::openRightTank() {
@@ -135,13 +181,39 @@ void sendStopSignal() {
 }
 
 void BoatController::update() {
+  controllerTimer.update();
   int value = readChannel(2, -100, 100, 0);
   if(value < 1) {    
-    externalControl = true;
-    digitalWrite(EXTERNAL_CONTROL, HIGH);   
+    externalControl = true;    
+    int engine = readChannel(1, -100, 100, 0);//motor
+    int translatedSpeed = map(engine, -100, 100, 200, 420); //translate input speed only to forward rotation;
+    pwm.setPWM(GAS_CHANNEL, 0, translatedSpeed);
+
+    int steer = readChannel(0, -100, 100, 0);//carma
+    int pulseMicros = map(steer, -100, 100, 180, 440);
+    pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
+
+
+    int rightTank = readChannel(5, -100, 100, 0);//right
+    int leftTank = readChannel(4, -100, 100, 0);//left
+    if(rightTank == 89) {
+      closeRightTank();
+    }
+    if(rightTank == -100) {
+      openRightTank();
+    }
+    if(leftTank == -105) {
+      closeLeftTank();
+    }
+    if(leftTank == 81) {
+      openLeftTank();
+    }
+
+    digitalWrite(EXTERNAL_CONTROL, LOW);   
     return;
   }
   externalControl = false;
+  //digitalWrite(EXTERNAL_CONTROL, HIGH); 
   digitalWrite(EXTERNAL_CONTROL, LOW);  
 }
 
@@ -167,7 +239,8 @@ int BoatController::adjustHeading(double relativeBearing, int speedComand)
   
   int servoValue = map(relativeBearing, -90, 90, 0, 180);  
 
-  steer(servoValue);
+  //steer(servoValue);
+  adjustCourse(servoValue);
   gas();
 
   return servoValue;

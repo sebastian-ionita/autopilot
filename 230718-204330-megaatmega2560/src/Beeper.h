@@ -5,7 +5,8 @@ class Beeper
   public:
   void begin(int pin);
   void beep(int ms);
-  void beep3(void);
+  void beep3(void);  
+  void update(void);
   void countdown(int mins);
 
   private:

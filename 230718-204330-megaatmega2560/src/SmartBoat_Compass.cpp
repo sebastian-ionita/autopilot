@@ -64,6 +64,7 @@ Vector SmartBoat_Compass::read(void)
   sensors_event_t event; 
   bno.getEvent(&event);
   //updateMinMax(event);
+  //Serial.println(event.orientation.x);
   
   v.XAxis= event.orientation.x;
   v.YAxis= event.orientation.y;

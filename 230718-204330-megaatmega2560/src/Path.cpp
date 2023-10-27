@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "Path.h"
-#include "libraries/Timer-2.1/Timer.h"
+#include "Timer.h"
 
 /*******************************************************************************************/
 
