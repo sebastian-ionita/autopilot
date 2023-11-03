@@ -48,12 +48,12 @@ class _AddFishingTripWidgetState extends State<AddFishingTripWidget>
                     isScrollControlled: true,
                     backgroundColor: Colors.transparent,
                     context: context,
-                    builder: (context) {
+                    builder: (bottomSheetContext) {
                       return ABottomSheet(
                           height: 700,
                           child: FishingTripWidget(
+                            parentContext: bottomSheetContext,
                             fishingTrip: null,
-                            state: widget.state,
                           ));
                     });
               },

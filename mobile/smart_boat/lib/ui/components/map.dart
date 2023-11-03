@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:print_color/print_color.dart';
+import 'package:location/location.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_boat/ui/base/AText.dart';
+import 'package:smart_boat/ui/base/theme.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/components/set_trip_points.dart';
 import '../../services/marker_conversion.dart';
@@ -20,7 +22,9 @@ class MapWidget extends StatefulWidget {
 class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  bool loading = false;
   late GoogleMapController mapController;
+  late LocationData? locationDetails = null;
 
   late Uint8List? boatIcon = null;
   late Uint8List? rodIcon = null;
@@ -29,51 +33,104 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
   void _onMapCreated(GoogleMapController controller, AppState appState) {
     mapController = controller;
     appState.setGoogleMapController(controller);
-    //setCameraPosition(appState);
   }
 
   @override
   void initState() {
     super.initState();
 
-    MarkersWithLabel.getBytesFromCanvasDynamic(
-            fontSize: 25,
-            iconPath: 'lib/assets/icons/boat_icon.png',
-            iconSize: const Size(80, 80),
-            plateReg: 'boat')
-        .then((icon) {
+    getLocation().then((location) {
       setState(() {
-        boatIcon = icon;
+        locationDetails = location;
       });
-    });
+      MarkersWithLabel.getBytesFromCanvasDynamic(
+              context: context,
+              fontSize: 28,
+              iconPath: 'lib/assets/icons/boat_icon.png',
+              iconSize: const Size(80, 80))
+          .then((icon) {
+        setState(() {
+          boatIcon = icon;
+        });
+      });
 
-    MarkersWithLabel.getBytesFromCanvasDynamic(
-            fontSize: 25,
-            iconPath: 'lib/assets/icons/rod_icon.png',
-            iconSize: const Size(80, 80),
-            plateReg: 'rod')
-        .then((icon) {
-      setState(() {
-        rodIcon = icon;
+      MarkersWithLabel.getBytesFromCanvasDynamic(
+              context: context,
+              fontSize: 28,
+              iconPath: '',
+              iconSize: const Size(80, 80),
+              text: 'Rod')
+          .then((icon) {
+        setState(() {
+          rodIcon = icon;
+        });
       });
-    });
 
-    MarkersWithLabel.getBytesFromCanvasDynamic(
-            fontSize: 25,
-            iconPath: 'lib/assets/icons/home_icon.png',
-            iconSize: const Size(80, 80),
-            plateReg: 'home')
-        .then((icon) {
-      setState(() {
-        homeIcon = icon;
+      MarkersWithLabel.getBytesFromCanvasDynamic(
+        context: context,
+        fontSize: 28,
+        iconPath: 'lib/assets/icons/home_icon.png',
+        iconSize: const Size(80, 80),
+      ).then((icon) {
+        setState(() {
+          homeIcon = icon;
+        });
       });
     });
+  }
+
+  Future<LocationData?> getLocation() async {
+    //check location permissions
+    setState(() {
+      loading = true;
+    });
+    Location location = Location();
+
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
+
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        setState(() {
+          loading = false;
+        });
+        // ignore: use_build_context_synchronously
+        Utils.showSnack(
+            SnackTypes.Info, "Please enable location on the device", context);
+        return null;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await location.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
+        setState(() {
+          loading = false;
+        });
+        // ignore: use_build_context_synchronously
+        Utils.showSnack(
+            SnackTypes.Info,
+            "This app required location permission, in order to be used!",
+            context);
+        return null;
+      }
+    }
+    var locationData = await location.getLocation();
+    setState(() {
+      loading = false;
+    });
+    return locationData;
   }
 
   LatLng getMapCeter(AppState state) {
     return state.boatLocation != null
         ? state.boatLocation!
-        : const LatLng(44.953629, 18.624336);
+        : locationDetails != null
+            ? LatLng(locationDetails!.latitude!, locationDetails!.longitude!)
+            : const LatLng(44.953629, 18.624336);
   }
 
   Set<Marker> getStateMarkers(AppState state) {
@@ -155,7 +212,7 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
         context: context,
         builder: (context) {
           return ABottomSheet(
-              height: 500,
+              height: 600,
               child: SetTripPointsWidget(
                 location: location,
                 state: state,
@@ -163,7 +220,6 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
         });
   }
 
-  // ignore: curly_braces_in_flow_control_structures
   CameraPosition getCameraPosition(AppState state) {
     var defaultPosition = CameraPosition(
       target: getMapCeter(state),
@@ -213,25 +269,62 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (_, appState, __) {
-      return FractionallySizedBox(
-        child: Center(
-          child: GoogleMap(
-            circles: getStatePointCircles(appState),
-            onMapCreated: (GoogleMapController controller) {
-              _onMapCreated(controller, appState);
-            },
-            markers: getStateMarkers(appState),
-            zoomControlsEnabled: false,
-            //myLocationButtonEnabled: false,
-            onLongPress: (LatLng location) {
-              onLongPressMap(location, appState);
-            },
-            onCameraMove: (CameraPosition position) {
-              onCameraMove(position, appState);
-            },
-            mapType: MapType.satellite,
-            initialCameraPosition: getCameraPosition(appState),
-          ),
+      return Scaffold(
+        body: Container(
+          width: double.infinity,
+          color: SmartBoatTheme.of(context).primaryBackground,
+          child: loading
+              ? Center(
+                  child: CircularProgressIndicator(
+                      color: SmartBoatTheme.of(context).primaryTextColor),
+                )
+              : locationDetails == null
+                  ? Center(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(10),
+                              child: AText(
+                                type: ATextTypes.smallHeading,
+                                text: "Location not enabled",
+                                textAlign: TextAlign.center,
+                                color:
+                                    SmartBoatTheme.of(context).primaryTextColor,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: AText(
+                                type: ATextTypes.normal,
+                                textAlign: TextAlign.center,
+                                text:
+                                    "Please make sure location services on this devices are enabled, and permissions to access location are allowed for this application.",
+                                color: SmartBoatTheme.of(context)
+                                    .secondaryTextColor,
+                              ),
+                            )
+                          ]),
+                    )
+                  : GoogleMap(
+                      circles: getStatePointCircles(appState),
+                      onMapCreated: (GoogleMapController controller) {
+                        _onMapCreated(controller, appState);
+                      },
+                      markers: getStateMarkers(appState),
+                      zoomControlsEnabled: false,
+                      //myLocationButtonEnabled: false,
+                      onLongPress: (LatLng location) {
+                        onLongPressMap(location, appState);
+                      },
+                      onCameraMove: (CameraPosition position) {
+                        onCameraMove(position, appState);
+                      },
+                      mapType: MapType.hybrid,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: false,
+                      initialCameraPosition: getCameraPosition(appState),
+                    ),
         ),
       );
     });

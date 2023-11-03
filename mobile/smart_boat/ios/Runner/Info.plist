@@ -30,6 +30,12 @@
 	<string>The app uses bluetooth to find, connect and transfer data between different devices</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>The app uses bluetooth to find, connect and transfer data between different devices</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+    <string>Application needs to access your current location</string>
+    <key>NSLocationAlwaysUsageDescription</key>
+    <string>Application needs to access your current location</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>Application needs to access your current location</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>${DART_DEBUG_BONJOUR_SERVICE}</string>

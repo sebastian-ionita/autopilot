@@ -21,7 +21,7 @@ class _ABottomSheetState extends State<ABottomSheet> {
           height: widget.height,
           padding: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
           decoration: BoxDecoration(
-            color: SmartBoatTheme.of(context).secondaryBackground,
+            color: SmartBoatTheme.of(context).primaryBackground,
             borderRadius: const BorderRadius.only(
               bottomLeft: Radius.circular(0),
               bottomRight: Radius.circular(0),

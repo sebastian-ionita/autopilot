@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:smart_boat/ui/base/theme.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import '../AText.dart';
 
 enum SnackTypes { Info, Error }
@@ -14,23 +17,50 @@ class Utils {
 
   static void showSnack(SnackTypes type, String snackText, BuildContext context,
       {bool? removeExisting}) {
-    SnackBar snackBar;
     switch (type) {
       case SnackTypes.Error:
         {
-          snackBar = getErrorSnack(snackText, context);
+          //snackBar = getErrorSnack(snackText, context);
+          showTopSnackBar(
+            displayDuration: const Duration(seconds: 2),
+            dismissType: DismissType.onTap,
+            Overlay.of(context),
+            CustomSnackBar.error(
+              message: snackText,
+              icon: const Icon(Icons.message,
+                  color: Color(0x15000000), size: 100),
+              textStyle: TextStyle(
+                  fontSize: 15,
+                  color: SmartBoatTheme.of(context).primaryTextColor),
+            ),
+          );
           break;
         }
       case SnackTypes.Info:
         {
-          snackBar = getSnack(snackText, context);
+          //snackBar = getSnack(snackText, context);
+          showTopSnackBar(
+            displayDuration: const Duration(seconds: 2),
+            dismissType: DismissType.onTap,
+            Overlay.of(context),
+            CustomSnackBar.success(
+              icon: const Icon(Icons.message,
+                  color: Color(0x15000000), size: 100),
+              textStyle: TextStyle(
+                  fontSize: 15,
+                  color: SmartBoatTheme.of(context).primaryTextColor),
+              backgroundColor:
+                  SmartBoatTheme.of(context).primaryButtonDisabledColor,
+              message: snackText,
+            ),
+          );
           break;
         }
     }
-    if (removeExisting != null && removeExisting) {
+    /*  if (removeExisting != null && removeExisting) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar();
     }
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+    ScaffoldMessenger.of(context).showSnackBar(snackBar); */
   }
 
   static double round(double value, int nrDecimals) {
@@ -72,6 +102,7 @@ class Utils {
   static SnackBar snack(String snackText, String type, BuildContext context) {
     return SnackBar(
         behavior: SnackBarBehavior.floating,
+        showCloseIcon: true,
         backgroundColor: Colors.black,
         content: AText(
             type: ATextTypes.small,

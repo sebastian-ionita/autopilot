@@ -53,35 +53,39 @@ class _AButtonState extends State<AButton> {
     switch (widget.type) {
       case AButtonTypes.primary:
         return AText(
-            type: ATextTypes.small,
+            type: ATextTypes.normal,
             text: text,
-            color: SmartBoatTheme.of(context).secondaryText,
+            color: widget.disabled != null && widget.disabled!
+                ? SmartBoatTheme.of(context).secondaryTextColor
+                : SmartBoatTheme.of(context).primaryTextColor,
             fontWeight: FontWeight.w500);
       case AButtonTypes.heading:
       case AButtonTypes.headingSelected:
         return AText(
-            type: ATextTypes.small,
+            type: ATextTypes.normal,
             text: text,
             color: SmartBoatTheme.of(context).primaryColor);
       case AButtonTypes.secondarySmall:
         return AText(
-            type: ATextTypes.small,
+            type: ATextTypes.normal,
             text: text,
             color: SmartBoatTheme.of(context).primaryColor);
       case AButtonTypes.secondary:
       default:
         return AText(
-            type: ATextTypes.small,
+            type: ATextTypes.normal,
             text: text,
             color: widget.linkText != null && widget.linkText == true
-                ? SmartBoatTheme.of(context).primaryText
-                : SmartBoatTheme.of(context).primaryText,
+                ? SmartBoatTheme.of(context).selectedTextColor
+                : SmartBoatTheme.of(context).primaryTextColor,
             fontWeight: FontWeight.bold);
     }
   }
 
   Color getButtonColorPrimary() {
-    if (widget.disabled != null && widget.disabled == true) return Colors.grey;
+    if (widget.disabled != null && widget.disabled == true) {
+      return SmartBoatTheme.of(context).primaryButtonDisabledColor;
+    }
     switch (widget.type) {
       case AButtonTypes.primary:
         return SmartBoatTheme.of(context).primaryButtonColor;
@@ -108,7 +112,7 @@ class _AButtonState extends State<AButton> {
   double getElevation() {
     switch (widget.type) {
       case AButtonTypes.primary:
-        return 2;
+        return 0;
       default:
         return 0;
     }
@@ -119,7 +123,7 @@ class _AButtonState extends State<AButton> {
       case AButtonTypes.secondarySmall:
         return 10;
       default:
-        return 35;
+        return 55;
     }
   }
 

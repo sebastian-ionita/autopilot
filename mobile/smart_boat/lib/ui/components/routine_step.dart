@@ -4,6 +4,7 @@ import 'package:smart_boat/ui/base/ADropdown/ADropdown.dart';
 import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/models/routine.dart';
+import 'package:smart_boat/ui/new_base/ASelectableButton.dart';
 
 import '../base/theme.dart';
 import '../models/app_state.dart';
@@ -54,6 +55,7 @@ class _RoutineStepWidgetState extends State<RoutineStepWidget> {
           .firstWhere((element) => element.index == selectedPoint.value);
       widget.step.name = rodPoint.name;
       widget.step.point = rodPoint.location;
+      widget.step.pointColor = rodPoint.color;
 
       state.saveState();
       state.refresh();
@@ -73,79 +75,66 @@ class _RoutineStepWidgetState extends State<RoutineStepWidget> {
   Widget build(BuildContext context) {
     return Consumer<AppState>(builder: (_, appState, __) {
       return Container(
-          decoration: BoxDecoration(
-              border: Border.all(
-                color: widget.step.stored
-                    ? SmartBoatTheme.of(context).primaryButtonColor
-                    : Colors.transparent,
-              ),
-              borderRadius: const BorderRadius.all(Radius.circular(10)),
-              color: Colors.grey),
-          padding: const EdgeInsets.all(15),
-          margin: const EdgeInsets.all(5),
-          child: Column(
+          decoration: const BoxDecoration(color: Colors.transparent),
+          padding: const EdgeInsets.only(left: 10, right: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-                SizedBox(
-                    width: 100,
-                    child:
-                        AText(type: ATextTypes.small, text: widget.step.name)),
-                SizedBox(
-                  width: 170,
-                  child: ADropdown<int>(
-                      options: getPointOptions(appState),
-                      hintText: "Select..",
-                      initialOption: null,
-                      onChanged: (item) {
-                        if (item != null) {
-                          setStepBasedOnSelectedItem(appState, item);
-                          //update step point and name with the values from selected in the ddl
-                        }
-                      }),
+              Padding(
+                padding: const EdgeInsets.only(left: 5, right: 10),
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                      color: widget.step.pointColor,
+                      borderRadius: BorderRadius.circular(10)),
                 ),
-                AIconButton(
-                  borderColor: Colors.green,
-                  borderRadius: 10,
-                  fillColor: SmartBoatTheme.of(context).primaryBackground,
-                  borderWidth: 1,
-                  icon: Icon(
-                    Icons.remove,
-                    color: SmartBoatTheme.of(context).primaryText,
-                    size: 20,
-                  ),
-                  onPressed: () async {
-                    if (widget.removeCallback != null) {
-                      widget.removeCallback!(widget.index);
-                    }
-                  },
-                )
-              ]),
-              Row(children: [
-                AText(type: ATextTypes.small, text: "Left"),
-                Checkbox(
-                  checkColor: Colors.white,
-                  value: widget.step.unloadLeft,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      widget.step.unloadLeft = value!;
-                    });
-                    appState.saveState();
-                    appState.refresh();
-                  },
-                ),
-                AText(type: ATextTypes.small, text: "Right"),
-                Checkbox(
-                  checkColor: Colors.white,
-                  value: widget.step.unloadRight,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      widget.step.unloadRight = value!;
-                    });
-                    appState.saveState();
-                    appState.refresh();
-                  },
-                ),
-              ]),
+              ),
+              SizedBox(
+                  width: 60,
+                  child: AText(
+                      type: ATextTypes.small,
+                      color: SmartBoatTheme.of(context).primaryTextColor,
+                      text: widget.step.name.toUpperCase())),
+              Container(
+                width: 70,
+                padding: const EdgeInsets.only(right: 5),
+                child: ASelectableButton(
+                    type: ASelectableButtonTypes.primarySmall,
+                    selected: widget.step.unloadLeft,
+                    buttonText: "Left",
+                    onPressed: () async {
+                      setState(() {
+                        widget.step.unloadLeft = !widget.step.unloadLeft;
+                      });
+                      appState.saveState();
+                      appState.refresh();
+                    }),
+              ),
+              Container(
+                width: 70,
+                padding: const EdgeInsets.only(right: 5),
+                child: ASelectableButton(
+                    type: ASelectableButtonTypes.primarySmall,
+                    selected: widget.step.unloadRight,
+                    buttonText: "Right",
+                    onPressed: () async {
+                      setState(() {
+                        widget.step.unloadRight = !widget.step.unloadRight;
+                      });
+                      appState.saveState();
+                      appState.refresh();
+                    }),
+              ),
+              Container(
+                width: 70,
+                padding: const EdgeInsets.only(right: 5),
+                child: ASelectableButton(
+                    type: ASelectableButtonTypes.primarySmall,
+                    selected: false,
+                    buttonText: "Both",
+                    onPressed: () async {}),
+              )
             ],
           ));
     });

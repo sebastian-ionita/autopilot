@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:print_color/print_color.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/AButton.dart';
-import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
-import 'package:smart_boat/ui/components/routine_config.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
+import 'package:smart_boat/ui/new_base/ASelectableButton.dart';
+import 'package:smart_boat/utils.dart';
 import '../base/ABottomSheet.dart';
 import '../base/AConfirmation.dart';
 import '../base/ATextField/ATextField.dart';
 import '../base/theme.dart';
 import '../models/fishing_trip.dart';
 import '../models/map_point.dart';
-import 'map_preview.dart';
+import '../models/routine.dart';
 
 class FishingTripWidget extends StatefulWidget {
+  BuildContext parentContext;
   FishingTrip? fishingTrip;
-  AppState state;
-  FishingTripWidget({Key? key, required this.fishingTrip, required this.state})
+  FishingTripWidget(
+      {Key? key, required this.parentContext, required this.fishingTrip})
       : super(key: key);
 
   @override
@@ -61,7 +64,7 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
           location: null)); // rod 1
     }
     tabController = TabController(
-        vsync: this, length: 2); // Change length as per your requirement
+        vsync: this, length: 1); // Change length as per your requirement
   }
 
   @override
@@ -71,7 +74,7 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
     super.dispose();
   }
 
-  void saveFishingTrip() {
+  void saveFishingTrip(AppState appState) {
     if (widget.fishingTrip == null) {
       //add new fishing tri[]
       var trip = FishingTrip(
@@ -79,9 +82,9 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
           home: home,
           rodPoints: rodPoints,
           mapPosition: null,
-          routine: null,
+          routine: Routine(running: false, steps: [], id: NumberUtils.rndId(6)),
           createdOn: DateTime.now().toLocal());
-      widget.state.addFishingTrip(trip);
+      appState.addFishingTrip(trip);
     } else {
       widget.fishingTrip!.name = nameController.text;
       widget.fishingTrip!.home = home;
@@ -96,235 +99,176 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.only(top: 10),
-        child: Container(
-          width: double.infinity,
-          height: 200,
-          decoration: const BoxDecoration(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-            color: Colors.blue,
+    return Consumer<AppState>(builder: (_, appState, __) {
+      return Column(children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10, top: 10),
+          child: AText(
+            text: "Add a Fishing Trip",
+            type: ATextTypes.smallHeading,
+            color: SmartBoatTheme.of(context).primaryTextColor,
           ),
-          alignment: Alignment.center,
-          child: MapPreviewWidget(zoom: 17, center: widget.state.boatLocation),
         ),
-      ),
-      TabBar(
+        Padding(
+          padding:
+              const EdgeInsets.only(bottom: 10, top: 10, left: 10, right: 10),
+          child: AText(
+            textAlign: TextAlign.center,
+            text:
+                "Define a name for your fishing trip, you can set current boat location as 'Home' point",
+            type: ATextTypes.normal,
+            color: SmartBoatTheme.of(context).secondaryTextColor,
+          ),
+        ),
+        /* TabBar(
         labelColor: SmartBoatTheme.of(context).primaryText,
         indicatorColor: SmartBoatTheme.of(context).primaryColor,
         controller: tabController,
         tabs: const [Tab(text: 'Settings'), Tab(text: 'Routine')],
-      ),
-      Expanded(
-          child: TabBarView(
-        controller: tabController,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ATextField(
-                            type: ATextFieldTypes.text,
-                            controller: nameController,
-                            label: "Trip name",
-                            placeholder: 'Specify location name'),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: AText(
-                        type: ATextTypes.small,
-                        text:
-                            "Home point - Press and confirm to set as current boat location"),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+      ), */
+        Expanded(
+            child: TabBarView(
+          controller: tabController,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
                         Expanded(
-                          child: AIconButton(
-                            borderColor: home.location != null
-                                ? Colors.green
-                                : SmartBoatTheme.of(context).primaryBackground,
-                            borderRadius: 10,
-                            fillColor:
-                                SmartBoatTheme.of(context).primaryBackground,
-                            borderWidth: 1,
-                            text: "Home",
-                            icon: Icon(
-                              Icons.home_filled,
-                              color: SmartBoatTheme.of(context).primaryText,
-                              size: 20,
-                            ),
-                            onPressed: () async {
-                              if (widget.state.boatLocation != null) {
-                                if (home.location != null) {
-                                  await showModalBottomSheet(
-                                      isScrollControlled: true,
-                                      backgroundColor: Colors.transparent,
-                                      context: context,
-                                      builder: (context) {
-                                        return ABottomSheet(
-                                            height: 200,
-                                            child: AConfirmation(
-                                                confirm: () async {
-                                                  home.location =
-                                                      widget.state.boatLocation;
-                                                  widget.state.refresh();
-                                                  Utils.showSnack(
-                                                      SnackTypes.Info,
-                                                      "Home was set as the current boat location",
-                                                      context);
-                                                  setState(() {});
-                                                },
-                                                text:
-                                                    "Are you sure you want to set home as current boat location? This will override the actual home point."));
-                                      });
-                                } else {
-                                  home.location = widget.state.boatLocation;
-                                  widget.state.refresh();
-                                  Utils.showSnack(
-                                      SnackTypes.Info,
-                                      "Home was set as the current boat location",
-                                      context);
-                                  setState(() {});
-                                }
-                              } else {
-                                Utils.showSnack(
-                                    SnackTypes.Error,
-                                    "Boat location cannot be retrieved",
-                                    context);
-                              }
-                            },
-                          ),
+                          child: ATextField(
+                              type: ATextFieldTypes.text,
+                              controller: nameController,
+                              label: "Trip name",
+                              placeholder: 'Add a trip name'),
                         ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: AText(
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20.0),
+                      child: AText(
                         type: ATextTypes.small,
-                        text:
-                            "Rod points - Press and confirm to set as current boat location"),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: rodPoints
-                            .map(
-                              (r) => AIconButton(
-                                borderColor: r.location != null
-                                    ? Colors.green
-                                    : SmartBoatTheme.of(context)
-                                        .primaryBackground,
-                                borderRadius: 10,
-                                fillColor: SmartBoatTheme.of(context)
-                                    .primaryBackground,
-                                borderWidth: 1,
-                                text: r.name,
-                                icon: Icon(
-                                  Icons.circle,
-                                  color: r.color,
-                                  size: 20,
-                                ),
+                        text: "Home point",
+                        color: SmartBoatTheme.of(context).primaryTextColor,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10.0),
+                      child: AText(
+                          type: ATextTypes.small,
+                          color: SmartBoatTheme.of(context).secondaryTextColor,
+                          text:
+                              "Press and confirm to set as current boat location"),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Expanded(
+                            child: ASelectableButton(
+                                buttonText: "Home",
+                                selected: home.location != null,
                                 onPressed: () async {
-                                  if (widget.state.boatLocation != null) {
-                                    if (r.location != null) {
+                                  if (appState.boatLocation != null) {
+                                    if (home.location != null) {
                                       await showModalBottomSheet(
                                           isScrollControlled: true,
                                           backgroundColor: Colors.transparent,
                                           context: context,
                                           builder: (context) {
                                             return ABottomSheet(
-                                                height: 200,
+                                                height: 250,
                                                 child: AConfirmation(
                                                     confirm: () async {
-                                                      r.location = widget
-                                                          .state.boatLocation;
-                                                      widget.state.refresh();
+                                                      home.location =
+                                                          appState.boatLocation;
+                                                      appState.refresh();
                                                       Utils.showSnack(
                                                           SnackTypes.Info,
-                                                          "${r.name} was set as the current boat location",
-                                                          context);
+                                                          "Home was set as the current boat location",
+                                                          widget.parentContext);
                                                       setState(() {});
                                                     },
                                                     text:
-                                                        "Are you sure you want to set ${r.name} as current boat location? This will override the actual ${r.name} point."));
+                                                        "Are you sure you want to set home as current boat location? This will override the actual home point."));
                                           });
                                     } else {
-                                      r.location = widget.state.boatLocation;
-                                      widget.state.refresh();
+                                      home.location = appState.boatLocation;
+                                      appState.refresh();
                                       Utils.showSnack(
                                           SnackTypes.Info,
-                                          "${r.name} was set as the current boat location",
-                                          context);
+                                          "Home was set as the current boat location",
+                                          widget.parentContext);
                                       setState(() {});
                                     }
                                   } else {
+                                    Print.red("Here");
                                     Utils.showSnack(
                                         SnackTypes.Error,
                                         "Boat location cannot be retrieved",
-                                        context);
+                                        widget.parentContext);
                                   }
                                 },
-                              ),
-                            )
-                            .toList()),
-                  ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
-                child: Row(
-                  children: [
-                    widget.fishingTrip != null
-                        ? AButton(
-                            type: AButtonTypes.secondary,
-                            buttonText: "Delete",
-                            onPressed: () async {
-                              await showModalBottomSheet(
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  context: context,
-                                  builder: (context) {
-                                    return ABottomSheet(
-                                        height: 200,
-                                        child: AConfirmation(
-                                            confirm: () async {
-                                              widget.state.removeFishingTrip(
-                                                  widget.fishingTrip!);
-                                              Navigator.pop(context);
-                                            },
-                                            title: "Confirmation",
-                                            text:
-                                                "Are you sure you want to remove fhsing trip details for '${widget.fishingTrip!.name}'"));
-                                  });
-                            })
-                        : const SizedBox(),
-                    AButton(
-                        type: AButtonTypes.primary,
-                        buttonText: "Save",
-                        onPressed: () async {
-                          saveFishingTrip();
-                        }),
+                                icon: const Icon(
+                                  Icons.home_filled,
+                                ),
+                                type: ASelectableButtonTypes.primary),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
-              )
-            ],
-          ),
-          RoutineConfigWidget()
-        ],
-      ))
-    ]);
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Row(
+                    children: [
+                      widget.fishingTrip != null
+                          ? AButton(
+                              type: AButtonTypes.secondary,
+                              buttonText: "Delete",
+                              onPressed: () async {
+                                await showModalBottomSheet(
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    context: context,
+                                    builder: (context) {
+                                      return ABottomSheet(
+                                          height: 240,
+                                          child: AConfirmation(
+                                              confirm: () async {
+                                                appState.removeFishingTrip(
+                                                    widget.fishingTrip!);
+                                                Navigator.pop(context);
+                                              },
+                                              title: "Confirmation",
+                                              text:
+                                                  "Are you sure you want to remove fihsing trip: '${widget.fishingTrip!.name}'"));
+                                    });
+                              })
+                          : const SizedBox(),
+                      AButton(
+                          type: AButtonTypes.primary,
+                          disabled: nameController.text.isEmpty,
+                          buttonText:
+                              widget.fishingTrip != null ? "Update" : "Add",
+                          onPressed: () async {
+                            saveFishingTrip(appState);
+                          }),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            /* RoutineConfigWidget()
+         */
+          ],
+        ))
+      ]);
+    });
   }
 }

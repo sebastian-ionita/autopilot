@@ -1,20 +1,18 @@
 import 'package:carousel_indicator/carousel_indicator.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
+import 'package:print_color/print_color.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_boat/ui/base/AIconButton.dart';
+import 'package:smart_boat/ui/base/theme.dart';
 import 'package:smart_boat/ui/components/fishing_trip_preview.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
-import '../../ble/ble_device_interactor.dart';
-import 'add_fishing_trip.dart';
+import '../base/ABottomSheet.dart';
+import 'fishing_trip.dart';
 
 // ignore: must_be_immutable
 class ActionsContainerWidget extends StatefulWidget {
-  AppState state;
-  final Function(BleDeviceInteractor deviceInteractor,
-      ConnectionStateUpdate bleConnectionStatus) startListening;
-  ActionsContainerWidget(
-      {Key? key, required this.state, required this.startListening})
-      : super(key: key);
+  ActionsContainerWidget({Key? key}) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api
@@ -31,68 +29,88 @@ class _ActionsContainerWidgetState extends State<ActionsContainerWidget>
     super.initState();
   }
 
-  List<Widget> getCarouselItems() {
-    var fishingTrips = widget.state.fishingTrips
+  List<Widget> getCarouselItems(AppState state) {
+    var fishingTrips = state.fishingTrips
         .map((f) => FishingTripPreviewWidget(
-              startListening: widget.startListening,
               fishingTrip: f,
-              state: widget.state,
             ))
         .toList();
     return [
       ...fishingTrips,
-      AddFishingTripWidget(
-        state: widget.state,
-      )
     ];
   }
 
-  int carouselItemsLength() {
-    return widget.state.fishingTrips.length + 1;
+  int carouselItemsLength(AppState state) {
+    return state.fishingTrips.length;
   }
 
   @override
   Widget build(BuildContext context) {
-    return FractionallySizedBox(
-      heightFactor: 0.35,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          const SizedBox(
-            height: 20,
-          ),
-          CarouselIndicator(
-            count: carouselItemsLength(),
-            index: pageIndex,
-          ),
-          Container(
-              width: double.infinity,
-              decoration: const BoxDecoration(
-                  borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30))),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  CarouselSlider(
-                      items: getCarouselItems(),
-                      options: CarouselOptions(
-                        viewportFraction: 1,
-                        initialPage: 0,
-                        enableInfiniteScroll: true,
-                        reverse: false,
-                        onPageChanged: (index, reason) {
-                          setState(() {
-                            pageIndex = index;
-                          });
-                        },
-                        scrollDirection: Axis.horizontal,
-                      )),
-                ],
-              )),
-        ],
-      ),
-    );
+    return Consumer<AppState>(builder: (_, appState, __) {
+      return Container(
+        margin: const EdgeInsets.only(left: 5, bottom: 9),
+        height: 90,
+        width: 250,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            appState.fishingTrips.isNotEmpty
+                ? Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CarouselIndicator(
+                          count: carouselItemsLength(appState),
+                          color: SmartBoatTheme.of(context).primaryTextColor,
+                          activeColor:
+                              SmartBoatTheme.of(context).selectedTextColor,
+                          index: appState.selectedFishingTripIndex,
+                        ),
+                        CarouselSlider(
+                            items: getCarouselItems(appState),
+                            options: CarouselOptions(
+                              viewportFraction: 1,
+                              initialPage: appState.selectedFishingTripIndex!,
+                              enableInfiniteScroll: true,
+                              reverse: false,
+                              height: 60,
+                              onPageChanged: (index, reason) {
+                                setState(() {
+                                  pageIndex = index;
+                                });
+                                var fishingTrip = appState.fishingTrips[index];
+                                appState.setSelectedFishingTrip(fishingTrip);
+                              },
+                              scrollDirection: Axis.horizontal,
+                            )),
+                      ],
+                    ),
+                  )
+                : const SizedBox(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8, left: 5),
+              child: AIconButton(
+                borderRadius: 30,
+                icon: const Icon(Icons.add),
+                onPressed: () async {
+                  await showModalBottomSheet(
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      context: context,
+                      builder: (bottomSheetContext) {
+                        return ABottomSheet(
+                            height: 500,
+                            child: FishingTripWidget(
+                              parentContext: bottomSheetContext,
+                              fishingTrip: null,
+                            ));
+                      });
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }

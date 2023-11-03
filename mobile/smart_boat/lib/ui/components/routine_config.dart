@@ -6,12 +6,16 @@ import 'package:smart_boat/ble/ble_device_interactor.dart';
 import 'package:smart_boat/services/message_sender.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
+import 'package:smart_boat/ui/components/routine_points_board.dart';
 import 'package:smart_boat/ui/components/routine_step.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import 'package:smart_boat/ui/models/fishing_trip.dart';
+import 'package:smart_boat/ui/models/map_point.dart';
 import 'package:smart_boat/ui/models/routine.dart';
+import 'package:smart_boat/ui/new_base/ASelectableButton.dart';
 
 import '../base/AButton.dart';
+import '../base/theme.dart';
 
 // ignore: must_be_immutable
 class RoutineConfigWidget extends StatefulWidget {
@@ -45,243 +49,116 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
 
       return routineStepsWidgets;
     }
-    return [];
+    return [
+      Container(
+        padding: const EdgeInsets.only(top: 30),
+        child: Center(
+          child: AText(
+            text: "No steps defined.",
+            type: ATextTypes.normal,
+            color: SmartBoatTheme.of(context).primaryTextColor,
+          ),
+        ),
+      )
+    ];
   }
 
-  Future<void> initializeRoutine(
-      AppState state, FishingTrip fishingTrip) async {
-    fishingTrip!.routine = Routine(running: false, steps: [
-      RoutineStep(
-          index: null,
-          name: '',
-          stored: false,
-          unloadLeft: false,
-          unloadRight: false,
-          point: null),
-      RoutineStep(
-          index: null,
-          name: 'Home',
-          stored: false,
-          unloadLeft: false,
-          unloadRight: false,
-          point: fishingTrip.home!.location),
-    ]);
-
+  Future<void> clearRoutine(AppState state) async {
+    state.selectedFishingTrip!.routine = Routine(
+        running: false, steps: [], id: state.selectedFishingTrip!.routine!.id);
+    Utils.showSnack(SnackTypes.Info, "Routine was cleared.", context);
     state.saveState();
     state.refresh();
-    Utils.showSnack(
-        SnackTypes.Info, "Routine initialized successfully", context);
   }
 
-  Future<void> addStep(AppState state, FishingTrip fishingTrip) async {
-    fishingTrip!.routine!.steps.add(RoutineStep(
+  Future<void> addStep(AppState state, Point selectedPoint) async {
+    state.selectedFishingTrip!.routine!.steps.add(RoutineStep(
         index: null,
-        name: '',
+        name: selectedPoint.name,
         unloadLeft: false,
+        pointColor: selectedPoint.color,
         stored: false,
         unloadRight: false,
-        point: null));
+        point: selectedPoint.location));
+
     state.saveState();
     state.refresh();
-    Utils.showSnack(
-        SnackTypes.Info, "Step was added, please set point", context);
-  }
-
-  Future<void> sendRoutine(AppState state, BleDeviceInteractor deviceInteractor,
-      ConnectionStateUpdate connectionState) async {
-    if (state.selectedFishingTrip!.routine != null) {
-      //set points stored flag to false
-      for (var element in state.selectedFishingTrip!.routine!.steps) {
-        element.stored = false;
-      }
-      state.saveState();
-      state.refresh();
-      //send new routine
-      await state.selectedFishingTrip!.routine!
-          .sendRoutine(state, deviceInteractor, connectionState);
-    }
+    Utils.showSnack(SnackTypes.Info,
+        "${selectedPoint.name} was added to the routine", context);
   }
 
   @override
   Widget build(BuildContext context) {
     return Consumer3<AppState, BleDeviceInteractor, ConnectionStateUpdate>(
         builder: (_, appState, deviceInteractor, connectionStatus, __) {
-      return Container(
-        padding: const EdgeInsets.only(bottom: 10, top: 10),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          appState.selectedFishingTrip!.routine == null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(10),
-                    child: AText(
-                        type: ATextTypes.normal,
-                        text:
-                            "No routine defined, start configure one by clicking the 'Add step' button."),
-                  ),
-                )
-              : const SizedBox(),
-          appState.selectedFishingTrip?.routine == null
-              ? Center(
-                  child: Row(
-                    children: [
-                      AButton(
-                          type: AButtonTypes.primary,
-                          buttonText: "Start",
-                          onPressed: () async {
-                            await initializeRoutine(
-                                appState, appState.selectedFishingTrip!);
-                          }),
-                    ],
-                  ),
-                )
-              : const SizedBox(),
-          appState.selectedFishingTrip?.routine != null
-              ? Expanded(
+      return Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10, top: 10),
+          child: AText(
+            text: "Configure routine",
+            type: ATextTypes.smallHeading,
+            textAlign: TextAlign.center,
+            color: SmartBoatTheme.of(context).primaryTextColor,
+          ),
+        ),
+        Padding(
+          padding:
+              const EdgeInsets.only(bottom: 10, top: 10, left: 10, right: 10),
+          child: AText(
+            textAlign: TextAlign.center,
+            text:
+                "Select the points in the desired order to define the routine",
+            type: ATextTypes.normal,
+            color: SmartBoatTheme.of(context).secondaryTextColor,
+          ),
+        ),
+        appState.selectedFishingTrip?.routine != null
+            ? Expanded(
+                child: SingleChildScrollView(
                   child: Column(
                     children: [
                       Padding(
-                        padding: const EdgeInsets.all(0.0),
-                        child: Row(
-                          children: [
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "XOFF",
-                                onPressed: () async {
-                                  var messageSenderService =
-                                      MessageSenderService(
-                                          appState: appState,
-                                          deviceInteractor: deviceInteractor,
-                                          connectionState: connectionStatus);
-
-                                  await messageSenderService
-                                      .initializeSendCharacteristic();
-                                  for (int i = 0; i < 3; i++) {
-                                    await messageSenderService
-                                        .sendMessage("XOFF*");
-                                  }
-                                }),
-                            const SizedBox(width: 5),
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "XON",
-                                onPressed: () async {
-                                  var messageSenderService =
-                                      MessageSenderService(
-                                          appState: appState,
-                                          deviceInteractor: deviceInteractor,
-                                          connectionState: connectionStatus);
-
-                                  await messageSenderService
-                                      .initializeSendCharacteristic();
-                                  for (int i = 0; i < 3; i++) {
-                                    await messageSenderService
-                                        .sendMessage("XON*");
-                                  }
-                                }),
-                          ],
-                        ),
+                        padding: const EdgeInsets.only(bottom: 20, top: 10),
+                        child:
+                            RoutinePointsBoardWidget(onSelect: (point) async {
+                          await addStep(appState, point);
+                        }),
                       ),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: [
-                              ...getRoutineSteps(
-                                  appState, appState.selectedFishingTrip!),
-                              Padding(
-                                padding: const EdgeInsets.all(5.0),
-                                child: Row(
-                                  children: [
-                                    AButton(
-                                        type: AButtonTypes.secondary,
-                                        buttonText: "Add step",
-                                        onPressed: () async {
-                                          await addStep(appState,
-                                              appState.selectedFishingTrip!);
-                                        }),
-                                  ],
-                                ),
-                              )
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(5.0),
-                        child: Row(
-                          children: [
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "Send routine",
-                                onPressed: () async {
-                                  //send boat routine
-                                  await sendRoutine(appState, deviceInteractor,
-                                      connectionStatus);
-                                }),
-                            const SizedBox(width: 5),
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "STOP",
-                                onPressed: () async {
-                                  //send boat routine
-                                  var messageSenderService =
-                                      MessageSenderService(
-                                          appState: appState,
-                                          deviceInteractor: deviceInteractor,
-                                          connectionState: connectionStatus);
-
-                                  await messageSenderService
-                                      .initializeSendCharacteristic();
-                                  await messageSenderService
-                                      .sendMessage("STOP*");
-                                }),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(0.0),
-                        child: Row(
-                          children: [
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "Check boat points",
-                                onPressed: () async {
-                                  var messageSenderService =
-                                      MessageSenderService(
-                                          appState: appState,
-                                          deviceInteractor: deviceInteractor,
-                                          connectionState: connectionStatus);
-
-                                  await messageSenderService
-                                      .initializeSendCharacteristic();
-                                  await messageSenderService.sendMessage(
-                                      "GETWP*",
-                                      stopTransmission: false);
-                                }),
-                            const SizedBox(width: 5),
-                            AButton(
-                                type: AButtonTypes.primary,
-                                buttonText: "START",
-                                onPressed: () async {
-                                  var messageSenderService =
-                                      MessageSenderService(
-                                          appState: appState,
-                                          deviceInteractor: deviceInteractor,
-                                          connectionState: connectionStatus);
-
-                                  await messageSenderService
-                                      .initializeSendCharacteristic();
-                                  await messageSenderService
-                                      .sendMessage("START*");
-                                }),
-                          ],
-                        ),
-                      ),
+                      ...getRoutineSteps(
+                          appState, appState.selectedFishingTrip!),
                     ],
                   ),
-                )
-              : const SizedBox(),
-        ]),
-      );
+                ),
+              )
+            : const SizedBox(),
+        Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: Row(
+            children: [
+              AButton(
+                  type: AButtonTypes.primary,
+                  buttonText: "Save",
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    /*  await addStep(appState,
+                                    appState.selectedFishingTrip!); */
+                  }),
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 100,
+                child: ASelectableButton(
+                    type: ASelectableButtonTypes.primary,
+                    icon: const Icon(Icons.refresh),
+                    selected: false,
+                    buttonText: "Clear",
+                    onPressed: () async {
+                      await clearRoutine(appState);
+                    }),
+              )
+            ],
+          ),
+        )
+      ]);
     });
   }
 }

@@ -20,16 +20,17 @@ void main() async {
   final bleLogger = BleLogger(ble: ble);
   final scanner = BleScanner(ble: ble, logMessage: bleLogger.addToLog);
   final monitor = BleStatusMonitor(ble);
-  final connector = BleDeviceConnector(
-    ble: ble,
-    logMessage: bleLogger.addToLog,
-  );
   final serviceDiscoverer = BleDeviceInteractor(
     bleDiscoverServices: ble.discoverServices,
     readCharacteristic: ble.readCharacteristic,
     writeWithResponse: ble.writeCharacteristicWithResponse,
     writeWithOutResponse: ble.writeCharacteristicWithoutResponse,
     subscribeToCharacteristic: ble.subscribeToCharacteristic,
+    logMessage: bleLogger.addToLog,
+  );
+  final connector = BleDeviceConnector(
+    ble: ble,
+    deviceInteractor: serviceDiscoverer,
     logMessage: bleLogger.addToLog,
   );
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:print_color/print_color.dart';
+import 'package:smart_boat/ble/ble_device_interactor.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
@@ -10,8 +11,10 @@ const int XOFF = 0x13; // ASCII code for XOFF (Pause transmission)
 
 class MessageHandlerService {
   AppState appState;
-  BuildContext context;
-  MessageHandlerService({required this.appState, required this.context});
+  BuildContext? context;
+  BleDeviceInteractor deviceInteractor;
+  MessageHandlerService(
+      {required this.appState, required this.deviceInteractor, this.context});
 
   String receivedMessage = '';
 
@@ -53,7 +56,9 @@ class MessageHandlerService {
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("N:", "");
         //show notification
-        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
+        if (context != null) {
+          Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
+        }
 
         appState.refresh();
       } catch (e) {
@@ -74,13 +79,14 @@ class MessageHandlerService {
         Print.red("Error on parsing BOAT LOCATION: $e");
       }
     } else if (messageToProcess.startsWith("INFO:")) {
-      //BOAT LOCATION
       try {
         //Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("INFO:", "");
 
-        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
+        if (context != null) {
+          Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
+        }
       } catch (e) {
         Print.red("Error on parsing BOAT LOCATION: $e");
       }
@@ -91,9 +97,10 @@ class MessageHandlerService {
         //boat location was received, update state property
         var validationMessage = messageToProcess.replaceAll("SW:", "");
         appState.selectedFishingTrip!.routine!
-            .validateSteps(appState, validationMessage);
-
-        Utils.showSnack(SnackTypes.Info, messageToProcess, context);
+            .validateSteps(appState, deviceInteractor, validationMessage);
+        if (context != null) {
+          Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
+        }
       } catch (e) {
         Print.red("Error on parsing BOAT POINTS: $e");
       }

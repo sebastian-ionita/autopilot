@@ -10,6 +10,8 @@ PODS:
   - GoogleMaps/Base (5.2.0)
   - GoogleMaps/Maps (5.2.0):
     - GoogleMaps/Base
+  - location (0.0.1):
+    - Flutter
   - Protobuf (3.22.0)
   - reactive_ble_mobile (0.0.1):
     - Flutter
@@ -21,6 +23,7 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
   - google_maps_flutter_ios (from `.symlinks/plugins/google_maps_flutter_ios/ios`)
+  - location (from `.symlinks/plugins/location/ios`)
   - reactive_ble_mobile (from `.symlinks/plugins/reactive_ble_mobile/ios`)
 
 SPEC REPOS:
@@ -36,6 +39,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_secure_storage/ios"
   google_maps_flutter_ios:
     :path: ".symlinks/plugins/google_maps_flutter_ios/ios"
+  location:
+    :path: ".symlinks/plugins/location/ios"
   reactive_ble_mobile:
     :path: ".symlinks/plugins/reactive_ble_mobile/ios"
 
@@ -44,6 +49,7 @@ SPEC CHECKSUMS:
   flutter_secure_storage: 23fc622d89d073675f2eaa109381aefbcf5a49be
   google_maps_flutter_ios: 3e0b99383a8003b8169d06e7e324170bd0424105
   GoogleMaps: 025272d5876d3b32604e5c080dc25eaf68764693
+  location: d5cf8598915965547c3f36761ae9cc4f4e87d22e
   Protobuf: 5e6cbc143d02fe08585d86b0098f8b755d2caaab
   reactive_ble_mobile: 9ce6723d37ccf701dbffd202d487f23f5de03b4c
   SwiftProtobuf: afced68785854575756db965e9da52bbf3dc45e7

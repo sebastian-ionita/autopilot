@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-
+import 'package:smart_boat/ui/base/theme.dart';
+import '../new_base/ATextButton.dart';
 import 'AButton.dart';
 import 'AText.dart';
 
 class AConfirmation extends StatefulWidget {
   final String text;
   String? title;
+  String? okText;
+  String? cancelText;
   final Future<void> Function() confirm;
   AConfirmation(
-      {Key? key, required this.text, required this.confirm, this.title})
+      {Key? key,
+      required this.text,
+      required this.confirm,
+      this.title,
+      this.okText,
+      this.cancelText})
       : super(key: key);
 
   @override
@@ -29,31 +37,52 @@ class _AConfirmationState extends State<AConfirmation> {
         Container(
           width: double.infinity,
           child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            AText(type: ATextTypes.normal, text: "Confirmation needed"),
+              Column(crossAxisAlignment: CrossAxisAlignment.center, children: [
+            Padding(
+              padding: const EdgeInsets.all(10),
+              child: AText(
+                type: ATextTypes.smallHeading,
+                text: widget.title ?? "Confirmation needed",
+                color: SmartBoatTheme.of(context).primaryTextColor,
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 10),
-              child: AText(type: ATextTypes.small, text: widget.text),
+              child: AText(
+                type: ATextTypes.normal,
+                textAlign: TextAlign.center,
+                text: widget.text,
+                color: SmartBoatTheme.of(context).secondaryTextColor,
+              ),
             ),
           ]),
         ),
         Padding(
           padding: const EdgeInsets.only(top: 10, bottom: 15),
           child: Row(children: [
-            AButton(
-              buttonText: "Cancel",
-              type: AButtonTypes.secondary,
-              onPressed: () async {
-                Navigator.pop(context);
-              },
+            Expanded(
+              child: ATextButton(
+                buttonText: widget.cancelText ?? "Cancel",
+                type: ATextButtonypes.secondary,
+                onPressed: () async {
+                  Navigator.pop(context);
+                },
+              ),
             ),
-            AButton(
-              buttonText: "Yes",
-              type: AButtonTypes.primary,
-              onPressed: () async {
-                await widget.confirm();
-                Navigator.pop(context); //close the bottom sheet
-              },
+            Container(
+              height: 30,
+              width: 1,
+              color: SmartBoatTheme.of(context).dividerColor,
+            ),
+            Expanded(
+              child: ATextButton(
+                buttonText: widget.okText ?? "Yes",
+                type: ATextButtonypes.primary,
+                onPressed: () async {
+                  await widget.confirm();
+                  Navigator.pop(context); //close the bottom sheet
+                },
+              ),
             ),
           ]),
         )

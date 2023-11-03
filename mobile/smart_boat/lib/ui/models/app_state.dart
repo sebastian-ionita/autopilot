@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:print_color/print_color.dart';
 import 'package:smart_boat/services/secure_storage_service.dart';
 import 'boat_data.dart';
 import 'fishing_trip.dart';
@@ -13,6 +14,7 @@ class AppState extends ChangeNotifier {
   late BoatData? boatLiveData = null;
   late List<FishingTrip> fishingTrips = [];
   late FishingTrip? selectedFishingTrip = null;
+  late int? selectedFishingTripIndex;
   late GoogleMapController mapController;
   bool listening = false;
   List<String> infoMessages = [];
@@ -35,8 +37,7 @@ class AppState extends ChangeNotifier {
   void addFishingTrip(FishingTrip trip) {
     fishingTrips.add(trip);
     //add fishing trip and save state
-    saveState();
-    notifyListeners();
+    setSelectedFishingTrip(trip);
   }
 
   void setBoatLocation(LatLng loc) {
@@ -58,18 +59,18 @@ class AppState extends ChangeNotifier {
   }
 
   void removeFishingTrip(FishingTrip tripToRemove) {
-    if (selectedFishingTrip != null &&
-        selectedFishingTrip!.name == tripToRemove.name) {
-      selectedFishingTrip = null;
-    }
-
     fishingTrips.removeWhere((ft) => ft.name == tripToRemove.name);
-    notifyListeners();
-    saveState();
+    if (fishingTrips.isNotEmpty) {
+      setSelectedFishingTrip(fishingTrips.first);
+    } else {
+      setSelectedFishingTrip(null);
+    }
   }
 
   void setSelectedFishingTrip(FishingTrip? trip) {
     selectedFishingTrip = trip;
+    selectedFishingTripIndex = fishingTrips.indexOf(trip!);
+    Print.cyan("Selected fishing trip index: $selectedFishingTripIndex");
 
     if (selectedFishingTrip != null) {
       var tripPosition = selectedFishingTrip!.mapPosition;

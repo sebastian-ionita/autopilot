@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:smart_boat/ui/base/ATextField/validators.dart';
+import 'package:smart_boat/ui/base/theme.dart';
 import '../utils/controls_utils.dart';
 import 'KeyboardOverlay.dart';
 
@@ -149,7 +150,7 @@ class _ATextFieldState extends State<ATextField> {
               focusNode.unfocus();
               if (widget.onChanged != null) widget.onChanged!('');
             },
-            icon: Icon(Icons.close));
+            icon: const Icon(Icons.close));
       case ATextFieldTypes.birthDate:
       case ATextFieldTypes.date:
       case ATextFieldTypes.dateTime:
@@ -157,7 +158,7 @@ class _ATextFieldState extends State<ATextField> {
             onPressed: () async {
               await showDatePickerModal();
             },
-            icon: Icon(Icons.calendar_month));
+            icon: const Icon(Icons.calendar_month));
       case ATextFieldTypes.time:
         return IconButton(
             onPressed: () async {
@@ -296,7 +297,7 @@ class _ATextFieldState extends State<ATextField> {
       return Paint()
         ..style = PaintingStyle.fill
         ..color = Colors.grey
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6);
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     } else {
       return null;
     }
@@ -325,7 +326,7 @@ class _ATextFieldState extends State<ATextField> {
         builder: (context, child) {
           return Theme(
             data: Theme.of(context).copyWith(
-              colorScheme: ColorScheme.light(
+              colorScheme: const ColorScheme.light(
                 primary: Color(0xFFD5A2FC), // header background color
                 onPrimary: Colors.black, // header text color
               ),
@@ -344,10 +345,11 @@ class _ATextFieldState extends State<ATextField> {
         initialDate: widget.initialDate != null
             ? widget.initialDate!
             : DateTime.now().toLocal(),
-        firstDate: DateTime.now().toLocal().add(Duration(days: -(100 * 365))),
+        firstDate:
+            DateTime.now().toLocal().add(const Duration(days: -(100 * 365))),
         lastDate: widget.type == ATextFieldTypes.birthDate
             ? DateTime.now().toLocal()
-            : DateTime.now().toLocal().add(Duration(days: 365)));
+            : DateTime.now().toLocal().add(const Duration(days: 365)));
     if (picked != null) {
       if (widget.onDateChanged != null) {
         await widget.onDateChanged!(picked);
@@ -464,7 +466,7 @@ class _ATextFieldState extends State<ATextField> {
       case ATextFieldTypes.time:
         {
           widget.controller.selection = TextSelection.fromPosition(
-            TextPosition(offset: 0),
+            const TextPosition(offset: 0),
           );
           break;
         }
@@ -483,7 +485,7 @@ class _ATextFieldState extends State<ATextField> {
         onTap: onTap,
         textInputAction: widget.textInputAction,
         autofocus: widget.autoFocus ?? false,
-        scrollPadding: EdgeInsets.only(bottom: 80),
+        scrollPadding: const EdgeInsets.only(bottom: 80),
         enabled: widget.disabled == null ? true : !widget.disabled!,
         showCursor: showCursor(),
         controller: widget.controller,
@@ -510,8 +512,8 @@ class _ATextFieldState extends State<ATextField> {
             fontWeight: FontWeight.normal,
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderSide: const BorderSide(
-              color: Color.fromARGB(255, 203, 104, 99),
+            borderSide: BorderSide(
+              color: SmartBoatTheme.of(context).primaryTextColor,
               width: 2,
             ),
             borderRadius: BorderRadius.circular(8),
@@ -529,9 +531,9 @@ class _ATextFieldState extends State<ATextField> {
               : widget.type == ATextFieldTypes.search
                   ? FloatingLabelBehavior.never
                   : FloatingLabelBehavior.auto,
-          labelStyle: const TextStyle(
+          labelStyle: TextStyle(
             fontFamily: 'Outfit',
-            color: Color(0xFF57636C),
+            color: SmartBoatTheme.of(context).primaryTextColor,
             fontSize: 14,
             fontWeight: FontWeight.normal,
           ),
@@ -542,37 +544,37 @@ class _ATextFieldState extends State<ATextField> {
             fontWeight: FontWeight.normal,
           ),
           enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(
-              color: Color(0xFFF1F4F8),
-              width: 2,
+            borderSide: BorderSide(
+              color: SmartBoatTheme.of(context).secondaryTextColor,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
           ),
           disabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(
               color: Color(0xFFF1F4F8),
-              width: 2,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
           ),
           focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(
-              color: Color(0xFFF1F4F8),
-              width: 2,
+            borderSide: BorderSide(
+              color: SmartBoatTheme.of(context).primaryTextColor,
+              width: 1,
             ),
             borderRadius: BorderRadius.circular(8),
           ),
           filled: true,
           fillColor: widget.disabled != null && widget.disabled!
               ? const Color.fromARGB(255, 248, 245, 245)
-              : Colors.white,
+              : Colors.transparent,
           contentPadding: const EdgeInsetsDirectional.fromSTEB(16, 20, 16, 20),
         ),
         style: TextStyle(
           fontFamily: 'AZOSans',
           color: widget.type == ATextFieldTypes.sensitive
               ? null
-              : const Color(0xFF0F1113),
+              : SmartBoatTheme.of(context).primaryTextColor,
           fontSize: 14,
           foreground: getMaskedForeground(),
           fontWeight: FontWeight.normal,
