@@ -184,11 +184,36 @@ void BoatController::update() {
   controllerTimer.update();
   int value = readChannel(2, -100, 100, 0);
   if(value < 1) {    
-    externalControl = true;
-    digitalWrite(EXTERNAL_CONTROL, HIGH);   
+    externalControl = true;    
+    int engine = readChannel(1, -100, 100, 0);//motor
+    int translatedSpeed = map(engine, -100, 100, 200, 420); //translate input speed only to forward rotation;
+    pwm.setPWM(GAS_CHANNEL, 0, translatedSpeed);
+
+    int steer = readChannel(0, -100, 100, 0);//carma
+    int pulseMicros = map(steer, -100, 100, 180, 440);
+    pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
+
+
+    int rightTank = readChannel(5, -100, 100, 0);//right
+    int leftTank = readChannel(4, -100, 100, 0);//left
+    if(rightTank == 89) {
+      closeRightTank();
+    }
+    if(rightTank == -100) {
+      openRightTank();
+    }
+    if(leftTank == -105) {
+      closeLeftTank();
+    }
+    if(leftTank == 81) {
+      openLeftTank();
+    }
+
+    digitalWrite(EXTERNAL_CONTROL, LOW);   
     return;
   }
   externalControl = false;
+  //digitalWrite(EXTERNAL_CONTROL, HIGH); 
   digitalWrite(EXTERNAL_CONTROL, LOW);  
 }
 

@@ -6,6 +6,9 @@
 
 static const int RXPin = 11, TXPin = 12;
 static const uint32_t GPSBaud = 9600;
+const int numReadings = 10;
+float readings[numReadings]; 
+int readIndex = 0;
 
 TinyGPSPlus gps;
 SoftwareSerial ss(RXPin, TXPin);
@@ -49,7 +52,7 @@ void Navigator::begin(void)
   ss.begin(GPSBaud);
   useInterrupt(false);
   // *** Comapss ***
-  compass.begin();  
+  //compass.begin();  
 
   #ifdef TEST_DATA
     testData[0] = {lat: 44.40361347409284, lng: 26.1065200269528};
@@ -75,22 +78,31 @@ void Navigator::begin(void)
 }
 
 
-/**********************************************
- * getDistance()
- * Returns distance from the current target.
- * The distance is not measured in a known unit.
- * Under the assumption that the boat is not 
- * going to traverse any long distance, the
- * cartesian distance between to lat/lon points
- * is used for distance, and then scaled up to
- * an integer value. Basically were assuming
- * the earth is flat. 
- **********************************************/
+void addValue(float value) {
+  // Shift all values to the left
+  for (int i = 0; i < numReadings - 1; i++) {
+    readings[i] = readings[i + 1];
+  }
+
+  // Add the new value at the end
+  readings[numReadings - 1] = value;
+}
+
+float getAverage() {
+  float total = 0.0;
+  for (int i = 0; i < numReadings; i++) {
+    total += readings[i];
+  }
+  return total / numReadings;
+}
+
 double Navigator::getDistance(void)
-{   
+{
   while (ss.available()) {
-    if(gps.encode(ss.read()))
-        break;                    
+    if(gps.encode(ss.read())) {
+      break;
+    }
+                        
   }
   
   double deltaLat = getLat() - targetLat;
@@ -110,8 +122,13 @@ void Navigator::setTarget(double lat, double lon)
 
 double Navigator::readCompass(void)
 {
-  Vector norm = compass.read();
-  return norm.XAxis + MAGNETIC_DECLINATION + CALIBRATION;
+  double heading = gps.course.deg() + MAGNETIC_DECLINATION;
+  if(heading < 0) {
+    heading  = heading + 360;
+  } else if(heading > 360) {
+    heading = heading - 360;
+  }
+  return heading;
   
 }
 
@@ -142,31 +159,25 @@ void Navigator::setCompassCalibration(int c) {
  **********************************************/
 double Navigator::getRelativeBearing(double* headingValue)
 {
-
-  //original implementation
-  //double bearing = atan2(targetLon - getLat(), targetLat - getLng() ) * 180 / 3.14159265359;
-  //double relativeBearing = readCompass() - bearing + MAGNETIC_DECLINATION + CALIBRATION;
-  //if (relativeBearing > 180)
-  //  relativeBearing -= 360;
-  //return relativeBearing; 
-
-  // Calculate angle from current position to target with respect to North
   double bearing = atan2(targetLon - getLng(), targetLat - getLat() ) * 180 / 3.14159265359;
   
   //read heading from compass
+  //double headingDegrees = gps.course.deg();
   double headingDegrees = readCompass();
-  Serial.println(headingDegrees);
-
-  //set heading degrees to the pointer received as input
+  
+  
   *headingValue = headingDegrees;
-
-  // Relative bearing
-  //double relativeBearing = headingDegrees - bearing + CALIBRATION;
+  
   double relativeBearing = headingDegrees - bearing;
   
   // Normalize such that the front of the boat reresents 0 degrees, and left is negative
-  if (relativeBearing > 180)
+  if (relativeBearing > 180) {
     relativeBearing -= 360;
+  }
+    
+
+    //Serial.println(relativeBearing);
+
 
   return relativeBearing; 
 }

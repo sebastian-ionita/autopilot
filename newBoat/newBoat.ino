@@ -16,6 +16,7 @@
 #include "Beeper.h"
 #include "LoRaMessenger.h"
 #include "Timer.h"
+#include "Sonar.h"
 
 #define BEEPER_PIN 5
 //#define DEBUG // Enables serial output feedback for basic functions
@@ -28,6 +29,7 @@ BoatController controller;
 Path path;
 Beeper beeper;
 LoRaMessenger loRaMessenger;
+Sonar sonar;
 
 Timer timer;
 
@@ -48,6 +50,7 @@ void setup()
    
   loRaMessenger.begin(onReceiveLora);  
   nav.begin();  
+  sonar.begin();
   beeper.begin(BEEPER_PIN);
   controller.beginServo(); 
   controller.startEngines();
@@ -92,8 +95,9 @@ void setup()
 
   #ifdef WAIT_FIX
     while(!nav.hasFix()) {
-      wdt_reset();
-      Serial.println("Waiting for fix...");
+      wdt_reset();      
+      controller.update(); 
+      //Serial.println("Waiting for fix...");
     }
   #endif
   Serial.println("Got a GPS fix");  
@@ -203,6 +207,7 @@ void update() {
   controller.update();  
   beeper.update(); 
   updateStartStatus();
+  sonar.update();
 }
 
 bool reachedWaypoint(double distance) {

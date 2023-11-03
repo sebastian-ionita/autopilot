@@ -20,6 +20,7 @@ void LoRaMessenger::begin(void (*onReceive)(int))
 
 void LoRaMessenger::send(String message)
 {
+  Serial.println(message);
   //noInterrupts();
   LoRa.beginPacket();
   LoRa.print(message);

@@ -1,5 +1,8 @@
 #include "Beeper.h"
 #include <Arduino.h>
+#include "Timer.h";
+
+Timer beeperTimer;
 
 void Beeper::begin(int speaker_pin)
 {
@@ -9,11 +12,17 @@ void Beeper::begin(int speaker_pin)
   
 }
 
+void Beeper::update()
+{
+  beeperTimer.update();
+}
+
 void Beeper::beep(int ms)
 {
-  digitalWrite(pin, LOW);
-  delay(ms);
-  digitalWrite(pin, HIGH);
+  beeperTimer.pulse(pin, ms, HIGH);
+  //digitalWrite(pin, LOW);
+  //delay(ms);
+  //digitalWrite(pin, HIGH);
 }
 
 void Beeper::beep3(void)
