@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:smart_boat/ui/base/theme.dart';
 
 class InputDoneView extends StatelessWidget {
   Future<void> Function() doneAction;
@@ -9,7 +10,7 @@ class InputDoneView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
         width: double.infinity,
-        color: CupertinoColors.extraLightBackgroundGray,
+        color: SmartBoatTheme.of(context).primaryButtonDisabledColor,
         child: Align(
             alignment: Alignment.topRight,
             child: Padding(
@@ -21,9 +22,9 @@ class InputDoneView extends StatelessWidget {
                   FocusScope.of(context).requestFocus(FocusNode());
                   await doneAction();
                 },
-                child: const Text("Done",
+                child: Text("Done",
                     style: TextStyle(
-                      color: CupertinoColors.activeBlue,
+                      color: SmartBoatTheme.of(context).primaryTextColor,
                     )),
               ),
             )));

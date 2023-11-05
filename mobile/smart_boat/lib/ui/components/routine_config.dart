@@ -3,7 +3,6 @@ import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:print_color/print_color.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ble/ble_device_interactor.dart';
-import 'package:smart_boat/services/message_sender.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/components/routine_points_board.dart';
@@ -72,13 +71,14 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
   }
 
   Future<void> addStep(AppState state, Point selectedPoint) async {
+    var nrOfSteps = state.selectedFishingTrip!.routine!.steps.length;
     state.selectedFishingTrip!.routine!.steps.add(RoutineStep(
         index: null,
         name: selectedPoint.name,
-        unloadLeft: false,
+        unloadLeft: nrOfSteps == 0 ? true : false,
         pointColor: selectedPoint.color,
         stored: false,
-        unloadRight: false,
+        unloadRight: nrOfSteps == 1 ? true : false,
         point: selectedPoint.location));
 
     state.saveState();
@@ -140,8 +140,6 @@ class _RoutineConfigWidgetState extends State<RoutineConfigWidget> {
                   buttonText: "Save",
                   onPressed: () async {
                     Navigator.pop(context);
-                    /*  await addStep(appState,
-                                    appState.selectedFishingTrip!); */
                   }),
               const SizedBox(width: 10),
               SizedBox(

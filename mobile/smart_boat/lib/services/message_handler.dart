@@ -50,7 +50,7 @@ class MessageHandlerService {
         "[${formatter.format(DateTime.now().toLocal())}] $messageToProcess");
 
     //package finished sending, handle the message and make receive message null
-    Print.green(messageToProcess);
+    Print.green("Received: $messageToProcess");
     if (messageToProcess.startsWith("N:")) {
       try {
         //boat location was received, update state property
@@ -59,45 +59,59 @@ class MessageHandlerService {
         if (context != null) {
           Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
         }
-
         appState.refresh();
       } catch (e) {
         Print.red("Error on handling notification message: $e");
       }
     } else if (messageToProcess.startsWith("BL:")) {
-      //BOAT LOCATION
       try {
-        //Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("BL:", "");
         var params = messageToProcess.split(",");
         var lat = params[0];
         var lng = params[1];
         appState.setBoatLocation(LatLng(double.parse(lat), double.parse(lng)));
-        appState.refresh();
       } catch (e) {
         Print.red("Error on parsing BOAT LOCATION: $e");
       }
+    } else if (messageToProcess.startsWith("REACHED:")) {
+      try {
+        //Waypoint reached, update routine step
+        messageToProcess = messageToProcess.replaceAll("REACHED:", "");
+        var params = messageToProcess.split(",");
+        var routineId = params[0];
+        var routineStepIndex = params[1];
+        appState.setReachedRoutineWaypointIndex(
+            routineId, int.parse(routineStepIndex));
+      } catch (e) {
+        Print.red("Error on parsing REACHED message: $e");
+      }
+    } else if (messageToProcess.startsWith("FINISHED:")) {
+      try {
+        //Routine finished, update routine running flag
+        messageToProcess = messageToProcess.replaceAll("FINISHED:", "");
+        var routineId = messageToProcess;
+        appState.setFinishedRoutine(routineId);
+      } catch (e) {
+        Print.red("Error on parsing REACHED message: $e");
+      }
     } else if (messageToProcess.startsWith("INFO:")) {
       try {
-        //Print.green(receivedMessage);
-        //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("INFO:", "");
 
         if (context != null) {
           Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
         }
       } catch (e) {
-        Print.red("Error on parsing BOAT LOCATION: $e");
+        Print.red("Error on parsing INFO: $e");
       }
     } else if (messageToProcess.startsWith("SW:")) {
-      //BOAT LOCATION
       try {
         Print.green(messageToProcess);
         //boat location was received, update state property
         var validationMessage = messageToProcess.replaceAll("SW:", "");
         appState.selectedFishingTrip!.routine!
-            .validateSteps(appState, deviceInteractor, validationMessage);
+            .validateSteps(appState, validationMessage);
         if (context != null) {
           Utils.showSnack(SnackTypes.Info, messageToProcess, context!);
         }
@@ -107,10 +121,8 @@ class MessageHandlerService {
     } else if (messageToProcess.startsWith("LD:")) {
       //LIVE BOAT DATA
       try {
-        Print.green(receivedMessage);
         //boat location was received, update state property
         messageToProcess = messageToProcess.replaceAll("LD:", "");
-        Print.yellow(messageToProcess);
 
         var params = messageToProcess.split("|");
 
@@ -125,10 +137,23 @@ class MessageHandlerService {
         var lat = locationParams[0];
         var lng = locationParams[1];
 
-        appState.setBoatLocation(LatLng(double.parse(lat), double.parse(lng)));
+        var point = LatLng(double.parse(lat), double.parse(lng));
+        appState.setBoatLocation(point);
 
         appState.setLiveData(
             distance, heading, relativeBearing, rudderPos, motorSpeed);
+
+        try {
+          var runningStepIndex = params[6];
+          var runningRoutineId = params[7];
+
+          appState.setRunningRoutine(
+              runningRoutineId, int.parse(runningStepIndex), point);
+
+          //set running index
+        } catch (e) {
+          Print.red("Error parsing the running routine and index");
+        }
 
         //appState.refresh();
       } catch (e) {

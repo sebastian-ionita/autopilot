@@ -31,43 +31,50 @@ class _RoutinePointsBoardWidgetState extends State<RoutinePointsBoardWidget> {
         onTap: () async {
           await widget.onSelect(point);
         },
-        child: Padding(
-          padding: const EdgeInsets.all(2),
-          child: Image.asset(
-            'lib/assets/icons/home_icon.png',
-            width: 30, // Adjust the size as needed
-            height: 35, // Adjust the size as needed
-            fit: BoxFit.fill,
-          ),
-        ),
+        child: SizedBox(
+            width: 35,
+            height: 38,
+            child: Padding(
+              padding: const EdgeInsets.all(2),
+              child: Image.asset(
+                'lib/assets/icons/home_icon.png',
+                width: 30, // Adjust the size as needed
+                height: 35, // Adjust the size as needed
+                fit: BoxFit.fill,
+              ),
+            )),
       );
     }
     return GestureDetector(
       onTap: () async {
         await widget.onSelect(point);
       },
-      child: Column(
-        children: [
-          Container(
-            margin: const EdgeInsets.only(bottom: 3),
-            padding: const EdgeInsets.all(5),
-            decoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(5)),
-                color: SmartBoatTheme.of(context).primaryButtonDisabledColor),
-            child: AText(
-                type: ATextTypes.small,
-                color: SmartBoatTheme.of(context).primaryTextColor,
-                text: point.name),
-          ),
-          Container(
-            width: 10, // Adjust the point size as needed
-            height: 10, // Adjust the point size as needed
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: point.color,
+      child: SizedBox(
+        width: 50,
+        height: 40,
+        child: Column(
+          children: [
+            Container(
+              margin: const EdgeInsets.only(bottom: 3),
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                  borderRadius: const BorderRadius.all(Radius.circular(5)),
+                  color: SmartBoatTheme.of(context).primaryButtonDisabledColor),
+              child: AText(
+                  type: ATextTypes.small,
+                  color: SmartBoatTheme.of(context).primaryTextColor,
+                  text: point.name),
             ),
-          ),
-        ],
+            Container(
+              width: 10, // Adjust the point size as needed
+              height: 10, // Adjust the point size as needed
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: point.color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

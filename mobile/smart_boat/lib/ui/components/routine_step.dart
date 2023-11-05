@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/ADropdown/ADropdown.dart';
-import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/models/routine.dart';
 import 'package:smart_boat/ui/new_base/ASelectableButton.dart';
@@ -132,8 +131,13 @@ class _RoutineStepWidgetState extends State<RoutineStepWidget> {
                 child: ASelectableButton(
                     type: ASelectableButtonTypes.primarySmall,
                     selected: false,
-                    buttonText: "Both",
-                    onPressed: () async {}),
+                    icon: const Icon(Icons.remove, color: Colors.red),
+                    buttonText: "",
+                    onPressed: () async {
+                      if (widget.removeCallback != null) {
+                        widget.removeCallback!(widget.index);
+                      }
+                    }),
               )
             ],
           ));

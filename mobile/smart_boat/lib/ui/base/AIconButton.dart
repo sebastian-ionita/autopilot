@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 
@@ -55,6 +56,7 @@ class _AIconButtonState extends State<AIconButton> {
       _loading = true;
     });
     try {
+      HapticFeedback.heavyImpact();
       await widget.onLongPressed!();
     } catch (e) {
       setState(() {
@@ -77,7 +79,7 @@ class _AIconButtonState extends State<AIconButton> {
         color: SmartBoatTheme.of(context).primaryBackground,
         clipBehavior: Clip.antiAlias,
         child: _loading
-            ? CircularProgressIndicator(strokeWidth: 4)
+            ? const CircularProgressIndicator(strokeWidth: 4)
             : Ink(
                 decoration: BoxDecoration(
                   color: widget.fillColor,

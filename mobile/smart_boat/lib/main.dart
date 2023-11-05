@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_boat/locator.dart';
 import 'package:smart_boat/main_page.dart';
 import 'package:smart_boat/services/secure_storage_service.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
+import 'package:smart_boat/ui/models/data_received_provider.dart';
 import 'ble/ble_device_connector.dart';
 import 'ble/ble_device_interactor.dart';
 import 'ble/ble_logger.dart';
@@ -34,6 +36,8 @@ void main() async {
     logMessage: bleLogger.addToLog,
   );
 
+  var dataReceivedProvider = DataReceived();
+
   var secureStorageService = SecureStorageService();
   AppState appState;
   var appStateJson = await secureStorageService.getItem("appState");
@@ -43,7 +47,7 @@ void main() async {
     appState = AppState(boatLocation: null, fishingTrips: []);
   }
 
-  //Print.red(appState.toJson());
+  appState.setDataReceived(dataReceivedProvider);
 
   runApp(
     MultiProvider(
@@ -53,6 +57,7 @@ void main() async {
         Provider.value(value: connector),
         Provider.value(value: serviceDiscoverer),
         Provider.value(value: bleLogger),
+        ChangeNotifierProvider(create: (context) => dataReceivedProvider),
         StreamProvider<BleScannerState?>(
           create: (_) => scanner.state,
           initialData: const BleScannerState(

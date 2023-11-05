@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 import '../base/AText.dart';
 
@@ -37,6 +38,7 @@ class _ARoundedButtonState extends State<ARoundedButton> {
       _loading = true;
     });
     try {
+      HapticFeedback.heavyImpact();
       await widget.onPressed();
     } catch (e) {
       setState(() {

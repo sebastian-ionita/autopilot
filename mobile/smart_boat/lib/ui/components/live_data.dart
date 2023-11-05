@@ -159,29 +159,6 @@ class _LiveDataWidgetState extends State<LiveDataWidget>
           ),
         ),
         Divider(color: SmartBoatTheme.of(context).dividerColor),
-
-        /*  Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              AButton(
-                  type: AButtonTypes.primary,
-                  buttonText: "Send to bluetooth",
-                  onPressed: () async {
-                    var messageSenderService = MessageSenderService(
-                        appState: appState,
-                        deviceInteractor: deviceInteractor,
-                        connectionState: connectionStateUpdate);
-                    await messageSenderService.initializeSendCharacteristic();
-                    await messageSenderService.sendMessage(
-                        "$counter Small message but a bit bigger that the other requesteddf ffsd f sf ssdfsd END EVEN A BIGGER ONE SMFM");
-                    setState(() {
-                      counter = counter + 1;
-                    });
-                  })
-            ],
-          ),
-        ), */
       ]);
     });
   }

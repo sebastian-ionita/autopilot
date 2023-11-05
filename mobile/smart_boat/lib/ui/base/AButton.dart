@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 
 import 'AText.dart';
@@ -35,6 +36,7 @@ class _AButtonState extends State<AButton> {
       _loading = true;
     });
     try {
+      HapticFeedback.heavyImpact();
       await widget.onPressed();
     } catch (e) {
       setState(() {

@@ -16,7 +16,11 @@ class MessageSenderService {
   MessageSenderService(
       {required this.appState,
       required this.deviceInteractor,
-      required this.connectionState});
+      required this.connectionState}) {
+    initializeSendCharacteristic().then((value) {
+      Print.cyan("Done initializing");
+    });
+  }
 
   List<String> splitMessage(String input) {
     List<String> result = [];
@@ -44,7 +48,8 @@ class MessageSenderService {
       if (s.characteristics.isNotEmpty) {
         for (var c in s.characteristics) {
           if (c.isWritableWithoutResponse) {
-            Print.green(c.characteristicId);
+            Print.cyan(
+                "Initializing characteristic for sending messages ${c.characteristicId}");
             characteristic = c;
           }
           if (c.isWritableWithResponse) {
@@ -66,14 +71,24 @@ class MessageSenderService {
         data.codeUnits);
   }
 
+  Future<void> stopBleTransmission() async {
+    await writeData(String.fromCharCode(
+        XOFF)); //send to arduino that it should stop sending data
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
+  Future<void> startBleTransmission() async {
+    await writeData(String.fromCharCode(XON));
+    await Future.delayed(const Duration(milliseconds: 500));
+  }
+
   Future<void> sendMessage(String messageToSend,
       {bool stopTransmission = true}) async {
     if (service != null && characteristic != null) {
       messageToSend = "[$messageToSend]";
+      Print.magenta("Message to send to the boat: $messageToSend");
       if (stopTransmission) {
-        await writeData(String.fromCharCode(
-            XOFF)); //send to arduino that it should stop sending data
-        await Future.delayed(const Duration(milliseconds: 500));
+        await stopBleTransmission();
       }
       //split message into multiple messages
       var messages = splitMessage(messageToSend);
@@ -85,8 +100,7 @@ class MessageSenderService {
         await Future.delayed(const Duration(milliseconds: 300));
       }
       if (stopTransmission) {
-        await writeData(String.fromCharCode(XON));
-        await Future.delayed(const Duration(milliseconds: 500));
+        await startBleTransmission();
       }
     } else {
       Print.red("Characteristic is null");

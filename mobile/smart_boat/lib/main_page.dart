@@ -10,6 +10,7 @@ import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/ble_available_devices.dart';
 import 'package:smart_boat/ui/ble_notallowed_screen.dart';
 import 'package:smart_boat/ui/components/configuration_actions.dart';
+import 'package:smart_boat/ui/components/data_received_indicator.dart';
 import 'package:smart_boat/ui/components/live_data.dart';
 import 'package:smart_boat/ui/components/received_messages.dart';
 import 'package:smart_boat/ui/home_page.dart';
@@ -24,7 +25,7 @@ class MainPageWidget extends StatefulWidget {
 }
 
 class _MainPageWidgetState extends State<MainPageWidget>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -105,7 +106,6 @@ class _MainPageWidgetState extends State<MainPageWidget>
                                       confirm: () async {
                                         deviceConnector.disconnect(
                                             connectionState.deviceId, appState);
-                                        appState.setListening(false);
                                         Utils.showSnack(
                                             SnackTypes.Info,
                                             "Successfully disconnected from boat!",
@@ -134,40 +134,40 @@ class _MainPageWidgetState extends State<MainPageWidget>
                   ? Padding(
                       padding: const EdgeInsets.only(left: 10),
                       child: SizedBox(
-                        width: 110,
-                        child: ARoundedButton(
-                          icon: Icon(
-                            Icons.data_exploration_outlined,
-                            color: SmartBoatTheme.of(context).thirdTextColor,
-                            size: 18.0,
-                          ),
-                          buttonText: 'Live data',
-                          onLongPressed: () async {
-                            await showModalBottomSheet(
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                context: context,
-                                builder: (context) {
-                                  return ABottomSheet(
-                                      height: 500,
-                                      child: ConfigurationSectionWidget());
-                                });
-                          },
-                          onPressed: () async {
-                            await showModalBottomSheet(
-                                isScrollControlled: true,
-                                backgroundColor: Colors.transparent,
-                                context: context,
-                                builder: (context) {
-                                  return ABottomSheet(
-                                      height: 500, child: LiveDataWidget());
-                                });
-                          },
-                          type: ARoundedButtonTypes.secondary,
-                        ),
-                      ),
+                          width: 110,
+                          child: ARoundedButton(
+                            icon: Icon(
+                              Icons.data_exploration_outlined,
+                              color: SmartBoatTheme.of(context).thirdTextColor,
+                              size: 18.0,
+                            ),
+                            buttonText: 'Live data',
+                            onLongPressed: () async {
+                              await showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  context: context,
+                                  builder: (context) {
+                                    return ABottomSheet(
+                                        height: 500,
+                                        child: ConfigurationSectionWidget());
+                                  });
+                            },
+                            onPressed: () async {
+                              await showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  backgroundColor: Colors.transparent,
+                                  context: context,
+                                  builder: (context) {
+                                    return ABottomSheet(
+                                        height: 500, child: LiveDataWidget());
+                                  });
+                            },
+                            type: ARoundedButtonTypes.secondary,
+                          )),
                     )
-                  : const SizedBox()
+                  : const SizedBox(),
+              connected ? DataReceivedIndicatorWidget() : const SizedBox()
             ],
           ),
         )

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/AText.dart';
@@ -9,9 +7,8 @@ import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/components/routine_config.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import 'package:smart_boat/ui/models/routine.dart';
-import '../../ble/ble_device_interactor.dart';
 import '../base/ABottomSheet.dart';
-import '../models/fishing_trip.dart';
+import '../base/AConfirmation.dart';
 
 class RoutinePreviewWidget extends StatefulWidget {
   RoutinePreviewWidget({Key? key}) : super(key: key);
@@ -34,8 +31,7 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
     return appState.selectedFishingTrip!.routine!;
   }
 
-  Widget routinePreview(AppState appState, BleDeviceInteractor deviceInteractor,
-      ConnectionStateUpdate connectionState) {
+  Widget routinePreview(AppState appState) {
     var routine = getRoutine(appState);
     List<Widget> routinePoints = [];
     var steps = routine.steps;
@@ -45,7 +41,7 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
         if (step.point != null) {
           if (step.name != "Home") {
             routinePoints.add(Padding(
-              padding: const EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.only(left: 5, bottom: 5),
               child: Container(
                 width: 10,
                 height: 10,
@@ -56,8 +52,18 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
             ));
           }
 
-          routinePoints.add(Padding(
-            padding: const EdgeInsets.only(left: 5, right: 5),
+          routinePoints.add(Container(
+            decoration: BoxDecoration(
+                border: Border(
+              bottom: BorderSide(
+                  width: 1,
+                  color: (step.reached
+                      ? Colors.green
+                      : (step.running
+                          ? Colors.blue
+                          : SmartBoatTheme.of(context).primaryBackground))),
+            )),
+            padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
             child: AText(
               type: ATextTypes.small,
               text:
@@ -79,6 +85,11 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
             onTap: () {
               if (appState.selectedFishingTrip!.rodPoints
                   .any((r) => r.location != null)) {
+                if (appState.selectedFishingTrip!.routine!.running) {
+                  Utils.showSnack(SnackTypes.Info,
+                      "When running, routine cannot be updated!", context);
+                  return;
+                }
                 showModalBottomSheet(
                     isScrollControlled: true,
                     backgroundColor: Colors.transparent,
@@ -97,8 +108,13 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 5, right: 5),
+                  Container(
+                    decoration: const BoxDecoration(
+                      border: Border(
+                          bottom: BorderSide(width: 1, color: Colors.green)),
+                    ),
+                    padding:
+                        const EdgeInsets.only(left: 5, right: 5, bottom: 5),
                     child: AText(
                         type: ATextTypes.small,
                         text: "Home",
@@ -118,29 +134,58 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
         ),
         Padding(
           padding: const EdgeInsets.only(left: 10),
-          child: AIconButton(
-            fillColor: SmartBoatTheme.of(context).primaryButtonDisabledColor,
-            borderRadius: 30,
-            icon: const Icon(Icons.play_arrow),
-            onPressed: () async {
-              await sendRoutine(appState, deviceInteractor, connectionState);
-            },
-          ),
+          child: appState.selectedFishingTrip!.routine!.running
+              ? AIconButton(
+                  fillColor:
+                      SmartBoatTheme.of(context).primaryButtonDisabledColor,
+                  borderRadius: 30,
+                  icon: const Icon(Icons.stop),
+                  onPressed: () async {
+                    await showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        builder: (context) {
+                          return ABottomSheet(
+                              height: 250,
+                              child: AConfirmation(
+                                  confirm: () async {
+                                    //todo: send stop command to the boat
+                                    Utils.showSnack(SnackTypes.Info,
+                                        "Boat will return home", context);
+                                  },
+                                  title: "Stop execution",
+                                  text:
+                                      "This will stop what the boat is doing and it will return home. Are you sure you want this?"));
+                        });
+                  },
+                )
+              : AIconButton(
+                  fillColor:
+                      SmartBoatTheme.of(context).primaryButtonDisabledColor,
+                  borderRadius: 30,
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () async {
+                    await sendRoutine(appState);
+                  },
+                ),
         )
       ],
     );
   }
 
   Widget separator() {
-    return AText(
-        type: ATextTypes.normal,
-        text: ">>",
-        fontWeight: FontWeight.bold,
-        color: SmartBoatTheme.of(context).selectedTextColor);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: AText(
+          type: ATextTypes.normal,
+          text: ">>",
+          fontWeight: FontWeight.bold,
+          color: SmartBoatTheme.of(context).selectedTextColor),
+    );
   }
 
-  Future<void> sendRoutine(AppState state, BleDeviceInteractor deviceInteractor,
-      ConnectionStateUpdate connectionState) async {
+  Future<void> sendRoutine(AppState state) async {
     if (state.selectedFishingTrip!.routine != null) {
       //set points stored flag to false
       for (var element in state.selectedFishingTrip!.routine!.steps) {
@@ -149,15 +194,13 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
       state.saveState();
       state.refresh();
       //send new routine
-      await state.selectedFishingTrip!.routine!
-          .sendRoutine(state, deviceInteractor, connectionState);
+      await state.selectedFishingTrip!.routine!.sendRoutine();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer3<AppState, BleDeviceInteractor, ConnectionStateUpdate>(
-        builder: (_, appState, deviceInteractor, bleConnectionStatus, __) {
+    return Consumer<AppState>(builder: (_, appState, __) {
       return Container(
         width: double.infinity,
         height: 60,
@@ -169,6 +212,11 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
                 onTap: () {
                   if (appState.selectedFishingTrip!.rodPoints
                       .any((r) => r.location != null)) {
+                    if (appState.selectedFishingTrip!.routine!.running) {
+                      Utils.showSnack(SnackTypes.Info,
+                          "When running, routine cannot be updated!", context);
+                      return;
+                    }
                     showModalBottomSheet(
                         isScrollControlled: true,
                         backgroundColor: Colors.transparent,
@@ -196,8 +244,7 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
               )
             : Padding(
                 padding: const EdgeInsets.only(left: 10),
-                child: routinePreview(
-                    appState, deviceInteractor, bleConnectionStatus),
+                child: routinePreview(appState),
               ),
       );
     });

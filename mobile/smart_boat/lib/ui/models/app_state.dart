@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:print_color/print_color.dart';
 import 'package:smart_boat/services/secure_storage_service.dart';
+import 'package:smart_boat/ui/models/data_received_provider.dart';
 import 'boat_data.dart';
 import 'fishing_trip.dart';
 
@@ -16,8 +17,13 @@ class AppState extends ChangeNotifier {
   late FishingTrip? selectedFishingTrip = null;
   late int? selectedFishingTripIndex;
   late GoogleMapController mapController;
+  late DataReceived _dataReceived;
   bool listening = false;
   List<String> infoMessages = [];
+
+  void setDataReceived(DataReceived dataReceivedProvider) {
+    _dataReceived = dataReceivedProvider;
+  }
 
   void addMessage(String message) {
     infoMessages.add(message);
@@ -38,6 +44,8 @@ class AppState extends ChangeNotifier {
     fishingTrips.add(trip);
     //add fishing trip and save state
     setSelectedFishingTrip(trip);
+
+    refresh();
   }
 
   void setBoatLocation(LatLng loc) {
@@ -46,8 +54,56 @@ class AppState extends ChangeNotifier {
     saveState();
   }
 
+  void setFinishedRoutine(String routineId) {
+    for (var trip in fishingTrips) {
+      if (trip.routine!.id == routineId) {
+        //set selected fishinf trip to the current routine trip
+        if (selectedFishingTrip!.name != trip.name) {
+          setSelectedFishingTrip(trip);
+        }
+        //set running routine
+        trip.routine!.running = false;
+        notifyListeners();
+
+        return;
+      }
+    }
+  }
+
+  void setRunningRoutine(
+      String routineId, int currentStepIndex, LatLng newPoint) {
+    for (var trip in fishingTrips) {
+      if (trip.routine!.id == routineId) {
+        //set selected fishinf trip to the current routine trip
+        if (selectedFishingTrip!.name != trip.name) {
+          setSelectedFishingTrip(trip);
+        }
+        //set running routine
+        trip.routine!.running = true;
+        //set running index
+        trip.routine!.steps[currentStepIndex].running = true;
+        //set new point on the path
+        trip.routine!.routinePath.add(newPoint);
+        return;
+      }
+    }
+  }
+
+  void setReachedRoutineWaypointIndex(String routineId, int currentStepIndex) {
+    for (var trip in fishingTrips) {
+      if (trip.routine!.id == routineId) {
+        //set running index
+        trip.routine!.steps[currentStepIndex].reached = true;
+        notifyListeners();
+
+        return;
+      }
+    }
+  }
+
   void setLiveData(String distance, String heading, String relativeBearing,
       String rudderPosition, String motorSpeed) {
+    _dataReceived.setFlag();
     boatLiveData = BoatData(
         distance: distance,
         heading: heading,
@@ -65,11 +121,19 @@ class AppState extends ChangeNotifier {
     } else {
       setSelectedFishingTrip(null);
     }
+
+    refresh();
   }
 
   void setSelectedFishingTrip(FishingTrip? trip) {
+    if (trip != null) {
+      trip.routine!.running = false;
+      trip.routine!.routinePath = [];
+      trip.routine!.clearProgress();
+    }
+
     selectedFishingTrip = trip;
-    selectedFishingTripIndex = fishingTrips.indexOf(trip!);
+    selectedFishingTripIndex = trip != null ? fishingTrips.indexOf(trip) : -1;
     Print.cyan("Selected fishing trip index: $selectedFishingTripIndex");
 
     if (selectedFishingTrip != null) {

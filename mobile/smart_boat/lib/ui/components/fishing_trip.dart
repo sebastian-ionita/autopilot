@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:print_color/print_color.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/AButton.dart';
@@ -120,12 +121,6 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
             color: SmartBoatTheme.of(context).secondaryTextColor,
           ),
         ),
-        /* TabBar(
-        labelColor: SmartBoatTheme.of(context).primaryText,
-        indicatorColor: SmartBoatTheme.of(context).primaryColor,
-        controller: tabController,
-        tabs: const [Tab(text: 'Settings'), Tab(text: 'Routine')],
-      ), */
         Expanded(
             child: TabBarView(
           controller: tabController,
@@ -232,6 +227,8 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
                               type: AButtonTypes.secondary,
                               buttonText: "Delete",
                               onPressed: () async {
+                                HapticFeedback.heavyImpact();
+
                                 await showModalBottomSheet(
                                     isScrollControlled: true,
                                     backgroundColor: Colors.transparent,
@@ -241,6 +238,16 @@ class _FishingTripWidgetState extends State<FishingTripWidget>
                                           height: 240,
                                           child: AConfirmation(
                                               confirm: () async {
+                                                if (appState
+                                                    .selectedFishingTrip!
+                                                    .routine!
+                                                    .running) {
+                                                  Utils.showSnack(
+                                                      SnackTypes.Error,
+                                                      "You cannot remove this fishing trip because a routine is running.",
+                                                      context);
+                                                  return;
+                                                }
                                                 appState.removeFishingTrip(
                                                     widget.fishingTrip!);
                                                 Navigator.pop(context);

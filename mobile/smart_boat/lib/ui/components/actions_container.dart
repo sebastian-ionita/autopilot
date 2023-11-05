@@ -1,10 +1,10 @@
 import 'package:carousel_indicator/carousel_indicator.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:print_color/print_color.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_boat/ui/base/AIconButton.dart';
 import 'package:smart_boat/ui/base/theme.dart';
+import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/components/fishing_trip_preview.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import '../base/ABottomSheet.dart';
@@ -68,13 +68,23 @@ class _ActionsContainerWidgetState extends State<ActionsContainerWidget>
                         ),
                         CarouselSlider(
                             items: getCarouselItems(appState),
+                            disableGesture:
+                                appState.selectedFishingTrip!.routine!.running,
                             options: CarouselOptions(
                               viewportFraction: 1,
-                              initialPage: appState.selectedFishingTripIndex!,
-                              enableInfiniteScroll: true,
+                              initialPage: 0,
+                              enableInfiniteScroll: false,
                               reverse: false,
                               height: 60,
                               onPageChanged: (index, reason) {
+                                if (appState
+                                    .selectedFishingTrip!.routine!.running) {
+                                  Utils.showSnack(
+                                      SnackTypes.Info,
+                                      "Boat is running, you cannot change the fishing trip",
+                                      context);
+                                  return;
+                                }
                                 setState(() {
                                   pageIndex = index;
                                 });

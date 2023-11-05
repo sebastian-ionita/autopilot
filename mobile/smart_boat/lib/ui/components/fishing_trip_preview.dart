@@ -58,12 +58,21 @@ class _FishingTripPreviewWidgetState extends State<FishingTripPreviewWidget>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: AText(
+                      type: ATextTypes.normal,
+                      color: SmartBoatTheme.of(context).primaryTextColor,
+                      text: widget.fishingTrip!.name),
+                ),
+              ),
               Padding(
-                padding: const EdgeInsets.all(10),
-                child: AText(
-                    type: ATextTypes.normal,
-                    color: SmartBoatTheme.of(context).primaryTextColor,
-                    text: widget.fishingTrip!.name),
+                padding: EdgeInsets.all(0),
+                child: Icon(
+                  Icons.select_all_rounded,
+                  color: SmartBoatTheme.of(context).primaryTextColor,
+                ),
               )
             ],
           ),

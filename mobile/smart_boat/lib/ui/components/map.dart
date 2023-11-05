@@ -200,6 +200,27 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
     return circles;
   }
 
+  Set<Polyline> getPolylines(AppState state) {
+    final Set<Polyline> polylines = {};
+    if (state.selectedFishingTrip != null) {
+      var routine = state.selectedFishingTrip!.routine!;
+      if (routine.running) {
+        final List<LatLng> points = [];
+        if (routine.routinePath.isNotEmpty) {
+          points.addAll(routine.routinePath);
+          polylines.add(Polyline(
+            polylineId: const PolylineId('routine_path'),
+            visible: true,
+            points: points,
+            width: 4,
+            color: Colors.blue,
+          ));
+        }
+      }
+    }
+    return polylines;
+  }
+
   void onLongPressMap(LatLng location, AppState state) {
     if (state.selectedFishingTrip == null) {
       Utils.showSnack(
@@ -323,6 +344,7 @@ class _MapWidgetState extends State<MapWidget> with TickerProviderStateMixin {
                       mapType: MapType.hybrid,
                       myLocationEnabled: true,
                       myLocationButtonEnabled: false,
+                      polylines: getPolylines(appState),
                       initialCameraPosition: getCameraPosition(appState),
                     ),
         ),

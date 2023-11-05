@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 import '../new_base/ATextButton.dart';
 import 'AButton.dart';
@@ -65,6 +66,7 @@ class _AConfirmationState extends State<AConfirmation> {
                 buttonText: widget.cancelText ?? "Cancel",
                 type: ATextButtonypes.secondary,
                 onPressed: () async {
+                  HapticFeedback.heavyImpact();
                   Navigator.pop(context);
                 },
               ),
@@ -79,7 +81,9 @@ class _AConfirmationState extends State<AConfirmation> {
                 buttonText: widget.okText ?? "Yes",
                 type: ATextButtonypes.primary,
                 onPressed: () async {
+                  HapticFeedback.heavyImpact();
                   await widget.confirm();
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context); //close the bottom sheet
                 },
               ),

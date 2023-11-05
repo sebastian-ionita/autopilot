@@ -11,6 +11,7 @@ import 'package:smart_boat/ui/models/app_state.dart';
 import '../ble/ble_device_connector.dart';
 import '../ble/ble_device_interactor.dart';
 import '../ble/ble_scanner.dart';
+import '../locator.dart';
 import '../services/message_handler.dart';
 
 class BleAvailableDevices extends StatelessWidget {
@@ -74,7 +75,8 @@ class _DeviceListState extends State<_DeviceList> {
       ConnectionStateUpdate connectionStateUpdate,
       AppState appState) async {
     try {
-      await widget.deviceConnector.connect(device.id, appState);
+      await widget.deviceConnector
+          .connect(device.id, deviceInteractor, appState);
       Utils.showSnack(
           SnackTypes.Info, "Successfully connected to ${device.name}", context);
     } catch (e) {
