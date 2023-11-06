@@ -122,7 +122,6 @@ void setup()
 
 void loop()
 {
-  //Serial.println("Loop cycle");
   update();    
   
   while(path.hasWaypoints())
@@ -143,9 +142,6 @@ void loop()
     }
        
     // Lock in the current waypoint
-
-    
-    
     while(distance > WAYPOINT_PROXIMITY)
     {
       update();
@@ -174,9 +170,10 @@ void loop()
     //delay(1000); 
     
     // Waypoint reached
-    loRaMessenger.send("N:Waypoint reached"); 
+    loRaMessenger.send("REACHED:"+path.getRunningRoutineId()+"|"+path.getRunningIndex()+"*"); 
     nextWaypoint(0);
     proximityAlert = -1;
+    
     #ifdef DEBUG
     Serial.println("\nWAYPOINT REACHED!!!");
     beeper.beep3();
@@ -185,6 +182,15 @@ void loop()
   
   // All waypoints reached
   controller.stopEngines();
+  
+  //send finished message to receiver
+  if(path.getRunningRoutineId() != ""){
+    loRaMessenger.send("FINISHED:"+path.getRunningRoutineId()+"*"); 
+    //set running routine to empty
+    path.setRunningRoutineId("");
+  }
+  
+  
   
   // Shutdown
   //cli(); // Disable interrupts
@@ -287,7 +293,9 @@ String getBoatLiveData() {
   liveData += ",";
   liveData += String(nav.getLng(), 8);
   liveData += "|"; //value divider
-  liveData += String(path.getRunningIndex()); //value divider
+  liveData += String(path.getRunningIndex()); //running index
+  liveData += "|"; //value divider
+  liveData += String(path.getRunningRoutineId()); //running routine id
   liveData += "*"; //this char will say that the here the sent package ends, and the message can be processed
   //Serial.println(liveData);
 
@@ -352,17 +360,31 @@ void onReceiveLora(int packetSize)
     sendMessageDelayed(message); 
   }
   
-  if(message == loRaMessenger.START) {
+  if(message.indexOf(loRaMessenger.START) >= 0) {
     isStarted = true;
-    Serial.println("start");
+    Serial.println("Start running");
     controller.setCourseStabilisation(true);    
     loRaMessenger.canSendLiveData = true;
+
+    //set running routine id
+    int startIndex = message.indexOf(loRaMessenger.START);
+    if(startIndex != -1){
+      int endIndex = message.indexOf("*");
+      if(endIndex != -1){
+        String routine_id = message.substring(startIndex + loRaMessenger.START.length(), endIndex);
+        Serial.print("Routine id: ");
+        Serial.println(routine_id);
+        path.setRunningRoutineId(routine_id); 
+      }
+    }
     timer.after(3000, stopCourseStabilisation, (void*)0);
     
   }
   
   if(message == loRaMessenger.STOP) {
     isStarted = false;     
+    Serial.println("Stop running");
+    path.setRunningRoutineId("");
     path.clearWaypoints();
   }
   

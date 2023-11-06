@@ -32,7 +32,7 @@ class LoRaMessenger
   const String XON = "XON*";   
   const String XOFF = "XOFF*";  
   const String REQUEST_DATA = "GETD*";
-  const String START = "START*";
+  const String START = "START:";
   const String STOP = "STOP*";
   
 };
