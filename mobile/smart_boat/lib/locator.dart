@@ -7,18 +7,17 @@ import 'package:smart_boat/ui/models/app_state.dart';
 
 final locator = GetIt.I;
 
-void initializeMessageHandler(
-    AppState appState, BleDeviceInteractor deviceInteractor) {
-  locator.registerSingleton<MessageHandlerService>(MessageHandlerService(
-      appState: appState, deviceInteractor: deviceInteractor));
+void initializeMessageHandler(AppState appState) {
+  locator.registerSingleton<MessageHandlerService>(
+      MessageHandlerService(appState: appState));
 }
 
 void initializeMessageSender(
     AppState appState,
     BleDeviceInteractor deviceInteractor,
-    ConnectionStateUpdate connectionState) {
+    QualifiedCharacteristic characteristic) {
   locator.registerSingleton<MessageSenderService>(MessageSenderService(
       appState: appState,
       deviceInteractor: deviceInteractor,
-      connectionState: connectionState));
+      qualifiedCharacteristic: characteristic));
 }

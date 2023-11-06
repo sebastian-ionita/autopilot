@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:print_color/print_color.dart';
-import 'package:smart_boat/ble/ble_device_interactor.dart';
 import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 
@@ -12,13 +11,11 @@ const int XOFF = 0x13; // ASCII code for XOFF (Pause transmission)
 class MessageHandlerService {
   AppState appState;
   BuildContext? context;
-  BleDeviceInteractor deviceInteractor;
-  MessageHandlerService(
-      {required this.appState, required this.deviceInteractor, this.context});
+  MessageHandlerService({required this.appState, this.context});
 
   String receivedMessage = '';
 
-  void onMessageReceived(List<int> messageBytes) {
+  Future<void> onMessageReceived(List<int> messageBytes) async {
     var message = String.fromCharCodes(messageBytes);
     if (message.contains(String.fromCharCode(XON))) {
       Print.red("Resume data transmission");
@@ -30,12 +27,12 @@ class MessageHandlerService {
 
     if (message.endsWith("*")) {
       receivedMessage += message;
-      handleMessage(receivedMessage);
+      await handleMessage(receivedMessage);
       receivedMessage = ''; //reset message
     } else if (message.indexOf("*") > 0) {
       var messageInParts = message.split("*");
       receivedMessage += "${messageInParts[0]}*";
-      handleMessage(receivedMessage);
+      await handleMessage(receivedMessage);
       receivedMessage = messageInParts[1];
     } else {
       receivedMessage += message;
@@ -44,7 +41,7 @@ class MessageHandlerService {
 
   final DateFormat formatter = DateFormat('hh:mm');
 
-  void handleMessage(String messageToProcess) {
+  Future<void> handleMessage(String messageToProcess) async {
     messageToProcess = messageToProcess.replaceAll("*", ""); //rem flag
     appState.addMessage(
         "[${formatter.format(DateTime.now().toLocal())}] $messageToProcess");
@@ -110,7 +107,7 @@ class MessageHandlerService {
         Print.green(messageToProcess);
         //boat location was received, update state property
         var validationMessage = messageToProcess.replaceAll("SW:", "");
-        appState.selectedFishingTrip!.routine!
+        await appState.selectedFishingTrip!.routine!
             .validateSteps(appState, validationMessage);
         if (context != null) {
           Utils.showSnack(SnackTypes.Info, messageToProcess, context!);

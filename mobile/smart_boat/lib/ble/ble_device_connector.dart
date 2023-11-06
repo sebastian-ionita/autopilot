@@ -32,27 +32,38 @@ class BleDeviceConnector extends ReactiveState<ConnectionStateUpdate> {
   // ignore: cancel_subscriptions
   late StreamSubscription<ConnectionStateUpdate>? _connection;
 
-  Future<void> _startListening(String deviceId, AppState appState,
-      BleDeviceInteractor deviceInteractor) async {
+  Future<void> _startListening(
+      String deviceId,
+      AppState appState,
+      BleDeviceInteractor deviceInteractor,
+      ConnectionStateUpdate connectionState) async {
     try {
       var messageHandlerService = locator<MessageHandlerService>();
+
       _deviceInteractor
           .discoverServices(deviceId)
           .then((discoveredServices) async {
         for (var s in discoveredServices) {
           if (s.characteristics.isNotEmpty) {
             for (var c in s.characteristics) {
-              if (c.isWritableWithoutResponse) {
+              if (c.isReadable && c.isWritableWithoutResponse) {
                 await characteristicSubscription?.cancel();
                 await Future.delayed(const Duration(milliseconds: 500));
+                //initialize qualified characteristic
+                var qualifiedCharacteristic = QualifiedCharacteristic(
+                    characteristicId: c.characteristicId,
+                    serviceId: s.serviceId,
+                    deviceId: deviceId);
+
                 Print.magenta("Start listening on ${c.characteristicId}");
+                //initialize message sender on the same characteristic
+                initializeMessageSender(
+                    appState, deviceInteractor, qualifiedCharacteristic);
+
                 characteristicSubscription = _deviceInteractor
-                    .subScribeToCharacteristic(QualifiedCharacteristic(
-                        characteristicId: c.characteristicId,
-                        serviceId: s.serviceId,
-                        deviceId: deviceId))
-                    .listen((event) {
-                  messageHandlerService.onMessageReceived(event);
+                    .subScribeToCharacteristic(qualifiedCharacteristic)
+                    .listen((event) async {
+                  await messageHandlerService.onMessageReceived(event);
                 }, onError: (e) {
                   Print.red("Error on characteristic subscription: $e");
                 }, onDone: () async {
@@ -69,7 +80,7 @@ class BleDeviceConnector extends ReactiveState<ConnectionStateUpdate> {
         }
       });
     } catch (e) {
-      Print.red("Exception on start listening");
+      Print.red("Exception on start listening $e");
     }
   }
 
@@ -90,10 +101,9 @@ class BleDeviceConnector extends ReactiveState<ConnectionStateUpdate> {
           await Future.delayed(const Duration(
               seconds: 1)); //wait one second before starting to listen
 
-          initializeMessageSender(appState, deviceInteractor, update);
-          initializeMessageHandler(appState, deviceInteractor);
+          initializeMessageHandler(appState);
 
-          await _startListening(deviceId, appState, deviceInteractor);
+          await _startListening(deviceId, appState, deviceInteractor, update);
 
           if (appState.fishingTrips.isNotEmpty) {
             //set first fishing trip selected

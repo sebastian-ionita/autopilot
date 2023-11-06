@@ -1,26 +1,24 @@
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:print_color/print_color.dart';
+import 'package:provider/provider.dart';
 import 'package:smart_boat/ble/ble_device_interactor.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
+
+import '../locator.dart';
+import 'message_handler.dart';
 
 class MessageSenderService {
   AppState appState;
   BleDeviceInteractor deviceInteractor;
-  ConnectionStateUpdate connectionState;
-  late DiscoveredCharacteristic? characteristic = null;
-  late DiscoveredService? service = null;
+  QualifiedCharacteristic qualifiedCharacteristic;
 
   static const int XON = 0x11; // ASCII code for XON (Resume transmission)
   static const int XOFF = 0x13; // ASCII code for XOFF (Pause transmission)
 
   MessageSenderService(
       {required this.appState,
-      required this.deviceInteractor,
-      required this.connectionState}) {
-    initializeSendCharacteristic().then((value) {
-      Print.cyan("Done initializing");
-    });
-  }
+      required this.qualifiedCharacteristic,
+      required this.deviceInteractor});
 
   List<String> splitMessage(String input) {
     List<String> result = [];
@@ -40,35 +38,9 @@ class MessageSenderService {
     return result;
   }
 
-  Future<void> initializeSendCharacteristic() async {
-    var discoveredServices =
-        await deviceInteractor.discoverServices(connectionState.deviceId);
-    for (var s in discoveredServices) {
-      service = s;
-      if (s.characteristics.isNotEmpty) {
-        for (var c in s.characteristics) {
-          if (c.isWritableWithoutResponse) {
-            Print.cyan(
-                "Initializing characteristic for sending messages ${c.characteristicId}");
-            characteristic = c;
-          }
-          if (c.isWritableWithResponse) {
-            Print.magenta(c.characteristicId);
-            characteristic = c;
-          }
-        }
-      }
-    }
-    return;
-  }
-
   Future<void> writeData(String data) async {
     await deviceInteractor.writeCharacterisiticWithoutResponse(
-        QualifiedCharacteristic(
-            characteristicId: characteristic!.characteristicId,
-            serviceId: service!.serviceId,
-            deviceId: connectionState.deviceId),
-        data.codeUnits);
+        qualifiedCharacteristic, data.codeUnits);
   }
 
   Future<void> stopBleTransmission() async {
@@ -84,26 +56,41 @@ class MessageSenderService {
 
   Future<void> sendMessage(String messageToSend,
       {bool stopTransmission = true}) async {
-    if (service != null && characteristic != null) {
-      messageToSend = "[$messageToSend]";
-      Print.magenta("Message to send to the boat: $messageToSend");
-      if (stopTransmission) {
-        await stopBleTransmission();
-      }
-      //split message into multiple messages
-      var messages = splitMessage(messageToSend);
-      for (var m in messages) {
-        while (!characteristic!.isWritableWithoutResponse) {
-          Print.red("Not writable");
-        }
-        await writeData(m);
-        await Future.delayed(const Duration(milliseconds: 300));
-      }
-      if (stopTransmission) {
-        await startBleTransmission();
-      }
-    } else {
-      Print.red("Characteristic is null");
+    messageToSend = "[$messageToSend]";
+    Print.magenta("Message to send to the boat: $messageToSend");
+    if (stopTransmission) {
+      await stopBleTransmission();
     }
+    //split message into multiple messages
+    var messages = splitMessage(messageToSend);
+    for (var m in messages) {
+      await writeData(m);
+      await Future.delayed(const Duration(milliseconds: 300));
+    }
+    if (stopTransmission) {
+      await startBleTransmission();
+    }
+  }
+
+  Future<void> startListening() async {
+    var messageHandlerService = locator<MessageHandlerService>();
+
+    deviceInteractor.subScribeToCharacteristic(qualifiedCharacteristic).listen(
+        (event) {
+      messageHandlerService.onMessageReceived(event);
+    }, onError: (e) {
+      Print.red("Error on characteristic subscription: $e");
+    }, onDone: () async {
+      Print.red("Characteristic is done: stopping connection");
+      //await _stop(deviceId);
+    }, cancelOnError: false);
+
+    appState.setListening(true);
+  }
+
+  Future<void> readCharacteristic() async {
+    var response =
+        await deviceInteractor.readCharacteristic(qualifiedCharacteristic);
+    Print.red(response);
   }
 }

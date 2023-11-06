@@ -139,9 +139,9 @@ class _ConfigurationSectionWidgetState extends State<ConfigurationSectionWidget>
                         return;
                       }
                       var messageSender = locator<MessageSenderService>();
-                      //await messageSender.initializeSendCharacteristic();
+                      //await messageSender.readCharacteristic();
                       await messageSender.sendMessage(messageController.text,
-                          stopTransmission: false);
+                          stopTransmission: true);
                     })
               ],
             ),

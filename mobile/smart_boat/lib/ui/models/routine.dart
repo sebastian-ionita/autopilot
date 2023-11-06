@@ -60,7 +60,6 @@ class Routine {
 
     await messageSender.sendMessage("GETWP*"); //send message to validate steps
 
-    //await messageSender.sendMessage("START*", stopTransmission: false);
     await messageSender.sendMessage("START:$id*"); //send routine with id
   }
 
