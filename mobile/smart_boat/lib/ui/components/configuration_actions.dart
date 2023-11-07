@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_boat/ble/ble_device_interactor.dart';
 import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/ATextField/ATextField.dart';
 import 'package:smart_boat/ui/base/theme.dart';
@@ -141,7 +139,7 @@ class _ConfigurationSectionWidgetState extends State<ConfigurationSectionWidget>
                       var messageSender = locator<MessageSenderService>();
                       //await messageSender.readCharacteristic();
                       await messageSender.sendMessage(messageController.text,
-                          stopTransmission: true);
+                          stopTransmission: false);
                     })
               ],
             ),

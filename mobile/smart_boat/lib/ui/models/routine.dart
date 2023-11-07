@@ -43,11 +43,14 @@ class Routine {
 
   Future<void> sendRoutine() async {
     var messageSender = locator<MessageSenderService>();
-    //await messageSender.initializeSendCharacteristic();
     Print.red("Sending routine with id: $id");
 
     //clean routine and routine steps flags
     clearProgress();
+
+    //STOP data transmission if for some reason is on
+    await messageSender.sendMessage("XOFF*",
+        stopTransmission: false); //send message to validate steps
 
     var stepsToSend = steps.where((s) => s.stored == false).toList();
     for (int i = 0; i < stepsToSend.length; i++) {
@@ -58,9 +61,21 @@ class Routine {
       await messageSender.sendMessage(wayPointMessage);
     }
 
-    await messageSender.sendMessage("GETWP*"); //send message to validate steps
+    await messageSender.sendMessage("GETWP*",
+        stopTransmission: false); //send message to validate steps
 
-    await messageSender.sendMessage("START:$id*"); //send routine with id
+    //await messageSender.sendMessage("START:$id*"); //send routine with id
+  }
+
+  Future<void> stopRoutine(LatLng homePoint) async {
+    var messageSender = locator<MessageSenderService>();
+    Print.red("Stopping running routine with id: $id");
+
+    var stopMessage =
+        "STOP:${homePoint.latitude.toStringAsFixed(6)}@,${homePoint.longitude.toStringAsFixed(6)}||0@,0##0-*";
+    Print.magenta(stopMessage);
+
+    await messageSender.sendMessage(stopMessage);
   }
 
   Future<void> validateSteps(AppState state, String validateMessage) async {
@@ -87,7 +102,8 @@ class Routine {
         Print.yellow("All points stored, send START command");
         var messageSender = locator<MessageSenderService>();
         //await messageSender.initializeSendCharacteristic();
-        await messageSender.sendMessage("START*",
+        await messageSender.sendMessage(
+            "START:${state.selectedFishingTrip!.routine!.id}*",
             stopTransmission: false); //send message to validate steps
       } else {
         //else send not stored steps
