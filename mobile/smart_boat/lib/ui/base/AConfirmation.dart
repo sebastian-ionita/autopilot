@@ -11,12 +11,15 @@ class AConfirmation extends StatefulWidget {
   String? okText;
   String? cancelText;
   final Future<void> Function() confirm;
+  final Future<void> Function()? cancel;
+
   AConfirmation(
       {Key? key,
       required this.text,
       required this.confirm,
       this.title,
       this.okText,
+      this.cancel,
       this.cancelText})
       : super(key: key);
 
@@ -67,6 +70,9 @@ class _AConfirmationState extends State<AConfirmation> {
                 type: ATextButtonypes.secondary,
                 onPressed: () async {
                   HapticFeedback.heavyImpact();
+                  if (widget.cancel != null) {
+                    await widget.cancel!();
+                  }
                   Navigator.pop(context);
                 },
               ),

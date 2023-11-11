@@ -7,6 +7,8 @@ import 'package:smart_boat/ui/base/utils/utils.dart';
 import 'package:smart_boat/ui/components/routine_config.dart';
 import 'package:smart_boat/ui/models/app_state.dart';
 import 'package:smart_boat/ui/models/routine.dart';
+import '../../locator.dart';
+import '../../services/message_sender.dart';
 import '../base/ABottomSheet.dart';
 import '../base/AConfirmation.dart';
 
@@ -29,6 +31,13 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
 
   Routine getRoutine(AppState appState) {
     return appState.selectedFishingTrip!.routine!;
+  }
+
+  String getUnloadText(RoutineStep step) {
+    if (!step.unloadLeft && !step.unloadRight) {
+      return "";
+    }
+    return "(${step.unloadLeft ? "L" : ""}${step.unloadRight ? "R" : ""})";
   }
 
   Widget routinePreview(AppState appState) {
@@ -66,8 +75,7 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
             padding: const EdgeInsets.only(left: 5, right: 5, bottom: 5),
             child: AText(
               type: ATextTypes.small,
-              text:
-                  "${step.name} ${step.unloadLeft ? "(L)" : (step.unloadRight ? "(R)" : '')}",
+              text: "${step.name} ${getUnloadText(step)}",
               color: SmartBoatTheme.of(context).primaryTextColor,
             ),
           ));
@@ -151,10 +159,20 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
                               child: AConfirmation(
                                   confirm: () async {
                                     //todo: send stop command to the boat
+                                    await stopRoutine(appState);
                                     Utils.showSnack(SnackTypes.Info,
                                         "Boat will return home", context);
                                   },
+                                  cancel: () async {
+                                    await stopBoat(appState);
+                                    Utils.showSnack(
+                                        SnackTypes.Info,
+                                        "Boat stopped, manual control activated",
+                                        context);
+                                  },
                                   title: "Stop execution",
+                                  cancelText: "STOP",
+                                  okText: "Stop & Home",
                                   text:
                                       "This will stop what the boat is doing and it will return home. Are you sure you want this?"));
                         });
@@ -196,6 +214,27 @@ class _RoutinePreviewWidgetState extends State<RoutinePreviewWidget>
       //send new routine
       await state.selectedFishingTrip!.routine!.sendRoutine();
     }
+  }
+
+  Future<void> stopRoutine(AppState state) async {
+    if (state.selectedFishingTrip!.routine != null) {
+      //set points stored flag to false
+      var homePoint = state.selectedFishingTrip!.home!.location;
+      //send new routine
+      await state.selectedFishingTrip!.routine!.stopRoutine(homePoint!);
+    }
+  }
+
+  Future<void> stopBoat(AppState state) async {
+    if (state.selectedFishingTrip!.routine != null) {
+      if (state.selectedFishingTrip!.routine!.running) {
+        state.setFinishedRoutine(state.selectedFishingTrip!.routine!.id);
+      }
+    }
+    var messageSender = locator<MessageSenderService>();
+    //await messageSender.initializeSendCharacteristic();
+    await messageSender.sendMessage("STOP*",
+        stopTransmission: false); //send message to validate steps
   }
 
   @override
