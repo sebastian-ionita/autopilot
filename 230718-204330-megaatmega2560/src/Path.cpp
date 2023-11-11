@@ -86,6 +86,16 @@ bool Path::hasWaypoints()
   return running_index < store_index;
 }
 
+String Path::getRunningRoutineId()
+{
+  return running_routine_id;
+}
+
+void Path::setRunningRoutineId(String id)
+{
+  running_routine_id = id;
+}
+
 void Path::clearWaypoints()
 {
   store_index = 0;
