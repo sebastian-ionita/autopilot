@@ -23,7 +23,6 @@ class LoRaMessenger
   const String endMarker = "-*";
   const String CALIBRATE_MESSAGE = "CALIBRATE*";
   const String CLEAR_WAYPOINTS_MESSAGE = "CLEARWP*";
-  const String REQUEST_WAYPOINTS_MESSAGE = "*3*";
   const String ADD_WAYPOINT_MESSAGE = "WP:";  
   const String SET_CALIBRATION_MESSAGE = "SC:";
   const String SET_SPEED_MESSAGE = "SP:";  
@@ -32,7 +31,9 @@ class LoRaMessenger
   const String XON = "XON*";   
   const String XOFF = "XOFF*";  
   const String REQUEST_DATA = "GETD*";
-  const String START = "START*";
+  const String START = "START:";
   const String STOP = "STOP*";
+  const String STOP_AND_RETURN = "STOP:";
+  const String GET_LOCATION = "GETL*";
   
 };

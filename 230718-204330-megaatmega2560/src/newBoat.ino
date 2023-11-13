@@ -16,7 +16,7 @@
 #include "Beeper.h"
 #include "LoRaMessenger.h"
 #include "Timer.h"
-#include "Sonar.h"
+//#include "Sonar.h"
 
 #define BEEPER_PIN 5
 //#define DEBUG // Enables serial output feedback for basic functions
@@ -29,7 +29,7 @@ BoatController controller;
 Path path;
 Beeper beeper;
 LoRaMessenger loRaMessenger;
-Sonar sonar;
+//Sonar sonar;
 
 Timer timer;
 
@@ -50,7 +50,7 @@ void setup()
    
   loRaMessenger.begin(onReceiveLora);  
   nav.begin();  
-  sonar.begin();
+  //sonar.begin();
   beeper.begin(BEEPER_PIN);
   controller.beginServo(); 
   controller.startEngines();
@@ -105,7 +105,7 @@ void setup()
   beeper.beep3(); // A happy little 3 chirps to know we have fix  
   //nav.compass.calibrate();  
   //every 1 second, send boat live data to received on the mobile
-  timer.every(2000, sendBoatLiveData, (void*)4);
+  timer.every(1000, sendBoatLiveData, (void*)4);
   //timer.after(3000, sendBoatLiveData, (void*)0);
   //timer.after(3200, addWaypoint2, (void*)0);
   //timer.after(3000, nextWaypoint, (void*)0);
@@ -122,7 +122,6 @@ void setup()
 
 void loop()
 {
-  //Serial.println("Loop cycle");
   update();    
   
   while(path.hasWaypoints())
@@ -143,9 +142,6 @@ void loop()
     }
        
     // Lock in the current waypoint
-
-    
-    
     while(distance > WAYPOINT_PROXIMITY)
     {
       update();
@@ -174,9 +170,10 @@ void loop()
     //delay(1000); 
     
     // Waypoint reached
-    loRaMessenger.send("N:Waypoint reached"); 
+    loRaMessenger.send("REACHED:"+path.getRunningRoutineId()+"|"+path.getRunningIndex()+"*"); 
     nextWaypoint(0);
     proximityAlert = -1;
+    
     #ifdef DEBUG
     Serial.println("\nWAYPOINT REACHED!!!");
     beeper.beep3();
@@ -185,6 +182,16 @@ void loop()
   
   // All waypoints reached
   controller.stopEngines();
+  
+  //send finished message to receiver
+  if(path.getRunningRoutineId() != ""){
+    loRaMessenger.send("FINISHED:"+path.getRunningRoutineId()+"*"); 
+    //set running routine to empty
+    path.setRunningRoutineId("");    
+    path.clearWaypoints();
+  }
+  
+  
   
   // Shutdown
   //cli(); // Disable interrupts
@@ -207,7 +214,7 @@ void update() {
   controller.update();  
   beeper.update(); 
   updateStartStatus();
-  sonar.update();
+  //sonar.update();
 }
 
 bool reachedWaypoint(double distance) {
@@ -287,7 +294,9 @@ String getBoatLiveData() {
   liveData += ",";
   liveData += String(nav.getLng(), 8);
   liveData += "|"; //value divider
-  liveData += String(path.getRunningIndex()); //value divider
+  liveData += String(path.getRunningIndex()); //running index
+  liveData += "|"; //value divider
+  liveData += String(path.getRunningRoutineId()); //running routine id
   liveData += "*"; //this char will say that the here the sent package ends, and the message can be processed
   //Serial.println(liveData);
 
@@ -324,15 +333,7 @@ void onReceiveLora(int packetSize)
   if(message == loRaMessenger.REQUEST_WAYPOINTS) {
     beeper.beep(100);
     loRaMessenger.send(path.getWaypointsMessage()); 
-    
-  }  
-  
-  if(message == loRaMessenger.REQUEST_WAYPOINTS_MESSAGE) {
-    String message = path.getWaypointsMessage();
-    sendMessageDelayed(message);
-    //loRaMessenger.send(path.getWaypointsMessage());
-    beeper.beep(100);
-    
+    //sendMessageDelayed(message);    
   }
 
   if(message == loRaMessenger.XON) {
@@ -352,17 +353,40 @@ void onReceiveLora(int packetSize)
     sendMessageDelayed(message); 
   }
   
-  if(message == loRaMessenger.START) {
+  if(message == loRaMessenger.GET_LOCATION) {
+    String message = "BL:";    
+    message += String(nav.getLat(), 8);
+    message += ",";
+    message += String(nav.getLng(), 8);
+    message += "*";
+    loRaMessenger.send(message); 
+  }
+  
+  if(message.indexOf(loRaMessenger.START) >= 0) {
     isStarted = true;
-    Serial.println("start");
+    Serial.println("Start running");
     controller.setCourseStabilisation(true);    
     loRaMessenger.canSendLiveData = true;
+
+    //set running routine id
+    int startIndex = message.indexOf(loRaMessenger.START);
+    if(startIndex != -1){
+      int endIndex = message.indexOf("*");
+      if(endIndex != -1){
+        String routine_id = message.substring(startIndex + loRaMessenger.START.length(), endIndex);
+        Serial.print("Routine id: ");
+        Serial.println(routine_id);
+        path.setRunningRoutineId(routine_id); 
+      }
+    }
     timer.after(3000, stopCourseStabilisation, (void*)0);
     
   }
   
   if(message == loRaMessenger.STOP) {
     isStarted = false;     
+    Serial.println("Stop running");
+    path.setRunningRoutineId("");
     path.clearWaypoints();
   }
   
@@ -372,6 +396,14 @@ void onReceiveLora(int packetSize)
       beeper.beep(100);
       controller.setSpeed(speed);
     }    
+  }
+  if(message.indexOf(loRaMessenger.ADD_WAYPOINT_MESSAGE) >= 0) {
+    LoraLatLong coordinates = loRaMessenger.parseLatLong(message, loRaMessenger.ADD_WAYPOINT_MESSAGE);
+    if(coordinates.lat != 0.00 && coordinates.lng != 0.00) {
+      Serial.println(coordinates.index);
+      beeper.beep(100);
+      path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight, coordinates.index);
+    }  
   }
   
   
@@ -383,12 +415,11 @@ void onReceiveLora(int packetSize)
     }    
   }
   
-  if(message.indexOf(loRaMessenger.ADD_WAYPOINT_MESSAGE) >= 0) {
-    LoraLatLong coordinates = loRaMessenger.parseLatLong(message, loRaMessenger.ADD_WAYPOINT_MESSAGE);
+  if(message.indexOf(loRaMessenger.STOP_AND_RETURN) >= 0) {
+    LoraLatLong coordinates = loRaMessenger.parseLatLong(message, loRaMessenger.STOP_AND_RETURN);
     if(coordinates.lat != 0.00 && coordinates.lng != 0.00) {
-      Serial.println(coordinates.index);
-      beeper.beep(100);
-      path.addWaypoint(coordinates.lat, coordinates.lng, coordinates.tankLeft, coordinates.tankRight, coordinates.index);
+      path.clearWaypoints();
+      path.addWaypoint(coordinates.lat, coordinates.lng, 0, 0, 0);
     }
   }  
   //interrupts();

@@ -249,6 +249,9 @@ int BoatController::adjustHeading(double relativeBearing, int speedComand)
  void BoatController::stopEngines()
  {
     enginesEnabled = false;
+    if(externalControl) {
+      return;
+    }
     sendStopSignal();
     #ifdef DEBUG
       Serial.println("Stopping engines");
