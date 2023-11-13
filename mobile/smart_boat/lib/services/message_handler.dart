@@ -60,6 +60,21 @@ class MessageHandlerService {
       } catch (e) {
         Print.red("Error on handling notification message: $e");
       }
+    } else if (messageToProcess.startsWith("BC:")) {
+      try {
+        //boat location was received, update state property
+        messageToProcess = messageToProcess.replaceAll("BC:", "");
+
+        var params = messageToProcess.split("|");
+
+        var proximity = params[0];
+        var rudderOffset = params[1];
+        var rudderDelay = params[2];
+
+        appState.setBoatConfig(proximity, rudderOffset, rudderDelay);
+      } catch (e) {
+        Print.red("Error on handling notification message: $e");
+      }
     } else if (messageToProcess.startsWith("BL:")) {
       try {
         //boat location was received, update state property

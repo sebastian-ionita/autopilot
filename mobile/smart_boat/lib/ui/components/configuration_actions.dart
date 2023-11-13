@@ -83,14 +83,7 @@ class _ConfigurationSectionWidgetState extends State<ConfigurationSectionWidget>
                             stopTransmission: false);
                       }
                     }),
-              ],
-            ),
-          ),
-          Divider(color: SmartBoatTheme.of(context).dividerColor),
-          Padding(
-            padding: const EdgeInsets.all(0.0),
-            child: Row(
-              children: [
+                const SizedBox(width: 5),
                 AButton(
                     type: AButtonTypes.primary,
                     buttonText: "XOFF B",
@@ -110,8 +103,39 @@ class _ConfigurationSectionWidgetState extends State<ConfigurationSectionWidget>
             ),
           ),
           Divider(color: SmartBoatTheme.of(context).dividerColor),
+          Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: Row(
+              children: [
+                AButton(
+                    type: AButtonTypes.primary,
+                    buttonText: "Load config",
+                    onPressed: () async {
+                      var messageSender = locator<MessageSenderService>();
+                      await messageSender.sendMessage("GETC*");
+                    }),
+                const SizedBox(width: 5),
+                AButton(
+                    type: AButtonTypes.primary,
+                    buttonText: "Empty",
+                    onPressed: () async {}),
+              ],
+            ),
+          ),
           Divider(color: SmartBoatTheme.of(context).dividerColor),
-          Divider(color: SmartBoatTheme.of(context).dividerColor),
+          appState.boatConfig != null
+              ? Padding(
+                  padding: const EdgeInsets.all(0.0),
+                  child: Row(
+                    children: [
+                      AText(
+                          type: ATextTypes.small,
+                          text:
+                              "Boat config: Proximity: ${appState.boatConfig!.proximity} Rudder Offset: ${appState.boatConfig!.rudderOffset} Rudder delay: ${appState.boatConfig!.rudderOffset}")
+                    ],
+                  ),
+                )
+              : const SizedBox(),
           Divider(color: SmartBoatTheme.of(context).dividerColor),
           Padding(
             padding: const EdgeInsets.all(8.0),

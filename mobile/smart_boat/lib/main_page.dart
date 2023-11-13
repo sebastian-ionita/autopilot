@@ -149,7 +149,7 @@ class _MainPageWidgetState extends State<MainPageWidget>
                                   context: context,
                                   builder: (context) {
                                     return ABottomSheet(
-                                        height: 500,
+                                        height: 800,
                                         child: ConfigurationSectionWidget());
                                   });
                             },

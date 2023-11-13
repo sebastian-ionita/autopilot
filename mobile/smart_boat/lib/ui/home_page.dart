@@ -4,6 +4,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:print_color/print_color.dart';
 import 'package:provider/provider.dart';
+import 'package:smart_boat/ui/base/AText.dart';
 import 'package:smart_boat/ui/base/theme.dart';
 import 'package:smart_boat/ui/components/map.dart';
 import 'package:smart_boat/ui/components/routine_preview.dart';
@@ -41,6 +42,21 @@ class _HomePageWidgetState extends State<HomePageWidget>
         child: Stack(
           children: [
             MapWidget(),
+            appState.boatLiveData != null
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 10, right: 10),
+                    child: Align(
+                        alignment: Alignment.topCenter,
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              AText(
+                                  type: ATextTypes.small,
+                                  text: "D: ${appState.boatLiveData!.distance}",
+                                  color: Colors.white)
+                            ])),
+                  )
+                : const SizedBox(),
             Align(
               alignment: Alignment.bottomCenter,
               child: Column(

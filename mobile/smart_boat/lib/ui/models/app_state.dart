@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:print_color/print_color.dart';
 import 'package:smart_boat/services/secure_storage_service.dart';
+import 'package:smart_boat/ui/models/boat_config.dart';
 import 'package:smart_boat/ui/models/data_received_provider.dart';
+import 'package:smart_boat/utils.dart';
 import 'boat_data.dart';
 import 'fishing_trip.dart';
 
@@ -13,6 +15,7 @@ class AppState extends ChangeNotifier {
 
   late LatLng? boatLocation;
   late BoatData? boatLiveData = null;
+  late BoatConfig? boatConfig = null;
   late List<FishingTrip> fishingTrips = [];
   late FishingTrip? selectedFishingTrip = null;
   late int? selectedFishingTripIndex;
@@ -83,7 +86,15 @@ class AppState extends ChangeNotifier {
         //set running index
         trip.routine!.steps[currentStepIndex].running = true;
         //set new point on the path
-        trip.routine!.routinePath.add(newPoint);
+        if (trip.routine!.routinePath.isNotEmpty) {
+          var lastPoint = trip.routine!.routinePath.last;
+          if (LocationUtils.arePointsInRadius(newPoint, lastPoint, 10)) {
+            trip.routine!.routinePath.add(newPoint); //add point
+          }
+        } else {
+          //routine empty, add point
+          trip.routine!.routinePath.add(newPoint); //add point
+        }
         return;
       }
     }
@@ -110,6 +121,16 @@ class AppState extends ChangeNotifier {
         relativeBearing: relativeBearing,
         motorSpeed: motorSpeed,
         rudderPosition: rudderPosition);
+    notifyListeners();
+    saveState();
+  }
+
+  void setBoatConfig(
+      String proximity, String rudderOffset, String rudderDelay) {
+    boatConfig = BoatConfig(
+        proximity: proximity,
+        rudderOffset: rudderOffset,
+        rudderDelay: rudderDelay);
     notifyListeners();
     saveState();
   }
