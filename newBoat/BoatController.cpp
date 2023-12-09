@@ -14,7 +14,6 @@ Timer controllerTimer;
 //#define DEBUG // enable serial output for debugging
 #define EXTERNAL_CONTROL 8
 #define OPEN_TANK_DURATION 5000
-#define STEERING_CALIBRATION -3
 
 boolean externalControl = true;
 boolean enginesEnabled = true;
@@ -24,6 +23,8 @@ uint8_t STEERING_CHANNEL = 0;
 uint8_t GAS_CHANNEL = 1;
 uint8_t RIGHT_LOAD = 2;
 uint8_t LEFT_LOAD = 3;
+int STEERING_CALIBRATION = 5;
+int STEERING_DELAY = 800;
 
 BoatController::BoatController()
 {
@@ -74,7 +75,7 @@ int getSteeringDuration(int degrees) {
     translatedDegrees = 90 - degrees;
   }
 
-  return 500;
+  return STEERING_DELAY;
 
   if(translatedDegrees < 50) {
     return 500;
@@ -189,7 +190,7 @@ void BoatController::update() {
     int translatedSpeed = map(engine, -100, 100, 200, 420); //translate input speed only to forward rotation;
     pwm.setPWM(GAS_CHANNEL, 0, translatedSpeed);
 
-    int steer = readChannel(0, -100, 100, 0);//carma
+    int steer = readChannel(0, -100, 100, 0) - STEERING_CALIBRATION;//carma
     int pulseMicros = map(steer, -100, 100, 180, 440);
     pwm.setPWM(STEERING_CHANNEL, 0, pulseMicros);
 
@@ -249,6 +250,9 @@ int BoatController::adjustHeading(double relativeBearing, int speedComand)
  void BoatController::stopEngines()
  {
     enginesEnabled = false;
+    if(externalControl) {
+      return;
+    }
     sendStopSignal();
     #ifdef DEBUG
       Serial.println("Stopping engines");
@@ -270,3 +274,16 @@ int BoatController::adjustHeading(double relativeBearing, int speedComand)
     #endif
     speed = sp;
  }
+ void BoatController::setSteeringCalibration(int c) {
+  STEERING_CALIBRATION = c;
+}
+ void BoatController::setSteeringDelay(int c) {
+  STEERING_DELAY = c;
+}
+
+ int BoatController::getSteeringCalibration() {
+  return STEERING_CALIBRATION;
+}
+ int BoatController::getSteeringDelay() {
+  return STEERING_DELAY;
+}

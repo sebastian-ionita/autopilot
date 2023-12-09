@@ -12,6 +12,11 @@ class BoatController
   static void unloadLeftTank(void);
   static void unloadRightTank(void);
   static void unloadAllTanks(void);
+  void setSteeringCalibration(int t);
+  void setSteeringDelay(int t);
+  int getSteeringCalibration(void);
+  int getSteeringDelay(void);
+
 
   private:
   int speed = 100;

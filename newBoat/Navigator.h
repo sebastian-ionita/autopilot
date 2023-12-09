@@ -4,10 +4,10 @@
 #include "SmartBoat_Compass.h"
 
 //#define MAGNETIC_DECLINATION 6.27 // Bucuresti
-//#define MAGNETIC_DECLINATION 6.2 // Pitesti
-#define MAGNETIC_DECLINATION 5.19 // Zabar
+#define MAGNETIC_DECLINATION 6.2 // Pitesti
+//#define MAGNETIC_DECLINATION 5.19 // Zabar
 //#define CALIBRATION 0 // You might need to adjust this if your compass readouts are as poopy as mine.
-#define WAYPOINT_PROXIMITY 5
+
 
 struct TestLatLong {
   float lat;
@@ -29,6 +29,7 @@ class Navigator
   float getLng();
   double getRelativeBearing(double* headingValue);
   bool hasFix();
+  int WAYPOINT_PROXIMITY = 5;
   SmartBoat_Compass compass;
   
   private:  
