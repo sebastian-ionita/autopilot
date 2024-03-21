@@ -10,15 +10,16 @@ HardwareSerial& ibusRcSerial = Serial1;
 IBusBM ibusRc;
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
 Timer controllerTimer;
+Timer calibrationTimer;
 
 //#define DEBUG // enable serial output for debugging
-#define EXTERNAL_CONTROL 8
 #define OPEN_TANK_DURATION 5000
 
 boolean externalControl = true;
 boolean enginesEnabled = true;
 boolean isAdjustingCourse = false;
 boolean isStabilisingCourse = false;
+
 uint8_t STEERING_CHANNEL = 0;
 uint8_t GAS_CHANNEL = 1;
 uint8_t RIGHT_LOAD = 2;
@@ -26,10 +27,52 @@ uint8_t LEFT_LOAD = 3;
 int STEERING_CALIBRATION = 5;
 int STEERING_DELAY = 1000;
 
+const int calSampleSize = 3;
+int calRuns = 0;
+double calValues[] = {};
+bool calibrationRun = false;
+bool calibrationFinished = false;
+double rBearing = 0;
+
+void updateCalibration(void* context) { 
+  if(!calibrationRun) {
+    return;
+  }
+  if(calRuns < calSampleSize) {
+    calValues[calRuns] = rBearing;
+    calibrationFinished = false;
+  } else {    
+    calibrationRun = false;
+    calibrationFinished = true;
+  }
+}
+
+void BoatController::calibrate() {
+  if(!calibrationFinished) {
+    return;
+  }
+  double sum = 0;
+  for(int i = 0; i < calSampleSize; i++) {
+    sum += calValues[i];
+  }
+  double avg = sum / calSampleSize;
+  Serial.println(avg);
+  avg = avg / 2;
+  calibrationFinished = false;
+  if(avg > 6 && avg < -6) {
+    STEERING_CALIBRATION = avg;
+    storage.store(storage.CALIBRATION_ADDRESS, avg);
+  }
+}
+
+void BoatController::startCalibration() {
+  calibrationRun = true;
+  calibrationFinished = false;
+  calRuns = 0;
+}
+
 BoatController::BoatController()
 {
-   pinMode(EXTERNAL_CONTROL, OUTPUT);   
-   digitalWrite(EXTERNAL_CONTROL, HIGH);  
    ibusRc.begin(ibusRcSerial);
 }
 
@@ -43,7 +86,10 @@ void BoatController::beginServo(void) {
   pwm.begin();
   pwm.setPWMFreq(50);
   closeRightTank();
-  closeLeftTank();
+  closeLeftTank();  
+  calibrationTimer.every(1000, updateCalibration, (void*)4);  
+  //STEERING_CALIBRATION = storage.read(storage.CALIBRATION_ADDRESS);
+  
 }
 
 void steer(void* degrees) {  
@@ -183,6 +229,7 @@ void sendStopSignal() {
 
 void BoatController::update() {
   controllerTimer.update();
+  calibrationTimer.update();
   int value = readChannel(2, -100, 100, 0);
   if(value < 1) {    
     externalControl = true;    
@@ -208,14 +255,10 @@ void BoatController::update() {
     }
     if(leftTank == 81) {
       openLeftTank();
-    }
-
-    digitalWrite(EXTERNAL_CONTROL, LOW);   
+    } 
     return;
   }
   externalControl = false;
-  //digitalWrite(EXTERNAL_CONTROL, HIGH); 
-  digitalWrite(EXTERNAL_CONTROL, LOW);  
 }
 
 
@@ -229,16 +272,23 @@ void BoatController::update() {
  * is negative. The angle is measured from the 
  * target to the front of the boat.
  **********************************************/
-int BoatController::adjustHeading(double relativeBearing, int speedComand)
+int BoatController::adjustHeading(double relativeBear, int speedComand)
 {    
+
+  if(speedComand == 100 && !calibrationRun) {
+    startCalibration();
+  }
+
   if(speedComand > 50) {
       float s = (speed/100.0) * speedComand;
       signalSpeed = int(s);
   } else {
     signalSpeed = speedComand;
   }
+
+  rBearing = relativeBear;
   
-  int servoValue = map(relativeBearing, -90, 90, 0, 180);  
+  int servoValue = map(relativeBear, -90, 90, 0, 180);  
 
   //steer(servoValue);
   adjustCourse(servoValue);

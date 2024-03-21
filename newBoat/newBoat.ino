@@ -55,44 +55,6 @@ void setup()
   controller.beginServo(); 
   controller.startEngines();
 
-
-  //path.addWaypoint(44.96401865891598, 24.89437097537398, 1, 1, 0); //test path1
-  //path.addWaypoint(44.963730194840515, 24.893402308225465, 1, 1, 1); //test path1
-  //path.addWaypoint(44.404753960198214, 26.10668608266575, 1, 0);//test path2
-  //path.addWaypoint(44.95424987946493, 18.625603815865414, 0, 0, 1); // zabar 14 groapa 30 dreapta
-  //path.addWaypoint(44.95425533815923, 18.625518966241945, 0, 1, 0); // zabar 14 groapa 30 stanga  
-  //path.addWaypoint(44.95424078164077, 18.62524127655908, 0, 0, 1); // zabar 14 in stanga groapa 30 dreapta  
-  //path.addWaypoint(44.954311744633145, 18.625225849356823, 0, 1, 0); // zabar 14 in stanga groapa 30 stanga  
-  //path.addWaypoint(44.95398968111622, 18.625565247858102, 0, 0, 1); // zabar 14 prima groapa dreapta  
-  //path.addWaypoint(44.953991500689185, 18.625498396638154, 0, 1, 0); // zabar 14 prima groapa stanga 
-
-  //dreapta
-  //path.addWaypoint(44.95424987946493, 18.625603815865414, 0, 1, 0); // zabar 14 prima groapa stanga   
-  //path.addWaypoint(44.95425533815923, 18.625518966241945, 0, 1, 0); // zabar 14 groapa 30 dreapta
-
-  //stanga
-  //path.addWaypoint(44.95424078164077, 18.62524127655908, 1, 0, 1); // zabar 14 groapa 30   
-  //path.addWaypoint(44.95425533815923, 18.625518966241945, 1, 0, 1);// zabar 14 in stanga groapa 30 
-   
-  //stanga 15
-  //path.addWaypoint(44.95405578768267, 18.624409543385553, 1, 0, 0); // zabar 15
-  //path.addWaypoint(44.95408025784635, 18.624725070616474, 0, 1, 1);// zabar 15
-  
-  //dreapta 15
-  //path.addWaypoint(44.953863084779016, 18.62486770621402, 0, 1, 0); // zabar 15
-  //path.addWaypoint(44.95428519505762, 18.62511839908242, 1, 0, 1);// zabar 15
-
-  
-  //path.addWaypoint(44.953396157710316, 18.625004910018188, 0, 0, 2); // zabar 14 home
-  
-  //path.addWaypoint(44.953583693964354, 18.624512963139995, 0, 0, 2); // zabar 15 home
-  //isStarted = true;
-  
-  
-  
-  //path.addWaypoint(44.95361397919283, 18.624514667580385, 1, 0, 1); // Daimon stanga
-  //path.addWaypoint(44.404611109453214, 26.108126680998154, 0, 0, 2); // Daimon home
-
   #ifdef WAIT_FIX
     while(!nav.hasFix()) {
       wdt_reset();      
@@ -103,18 +65,7 @@ void setup()
   Serial.println("Got a GPS fix");  
   
   beeper.beep3(); // A happy little 3 chirps to know we have fix  
-  //nav.compass.calibrate();  
-  //every 1 second, send boat live data to received on the mobile
-  timer.every(1000, sendBoatLiveData, (void*)4);
-  //timer.after(3000, sendBoatLiveData, (void*)0);
-  //timer.after(3200, addWaypoint2, (void*)0);
-  //timer.after(3000, nextWaypoint, (void*)0);
-  //timer.after(6000, nextWaypoint, (void*)0);
-  //timer.after(13000, nextWaypoint, (void*)0);
-  
-  //beeper.beep(1000);  
-  //beeper.beep3();
-  
+  timer.every(1000, sendBoatLiveData, (void*)4);  
 
   Serial.println("Setup finished");  
   
@@ -148,9 +99,11 @@ void loop()
       nav.setTarget(path.getLat(), path.getLon());  
       distance = nav.getDistance(); 
 
+      
       relativeBearing = nav.getRelativeBearing(&headingDegrees); //heading degrees is passed as pointer reference to be able to set it from within the method
       motorSpeed = getSpeedFromDistance(distance, relativeBearing);
-      servoValue = controller.adjustHeading(relativeBearing, motorSpeed);      
+      servoValue = controller.adjustHeading(relativeBearing, motorSpeed);   
+      //controller.calibrate();   
 
       #ifdef DEBUG
         Serial.print("distance: ");

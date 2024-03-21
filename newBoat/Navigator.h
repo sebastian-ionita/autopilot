@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
-#include <Adafruit_LSM303_U.h>
+//#include <Adafruit_LSM303_U.h>
 #include "SmartBoat_Compass.h"
 
 //#define MAGNETIC_DECLINATION 6.27 // Bucuresti

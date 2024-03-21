@@ -1,3 +1,5 @@
+#include "Storage.h"
+
 class BoatController
 {
   public:
@@ -16,6 +18,8 @@ class BoatController
   void setSteeringDelay(int t);
   int getSteeringCalibration(void);
   int getSteeringDelay(void);
+  void calibrate(void);
+  void startCalibration(void);
 
 
   private:
@@ -26,4 +30,5 @@ class BoatController
   static void closeRightTank();
   static void openLeftTank();
   static void closeLeftTank();  
+  Storage storage;
 };
