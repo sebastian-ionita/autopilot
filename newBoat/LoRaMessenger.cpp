@@ -68,7 +68,7 @@ int LoRaMessenger::parseInt(String message, const String startMarker) {
       char digit = intStr[i];
 
       // Check if the character is a valid digit
-      if (isdigit(digit)) {
+      if (isdigit(digit) || digit == '-') {
         digits += digit;
       } else {
         digits = ""; // Reset the digits string if an invalid character is found

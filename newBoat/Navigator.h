@@ -29,13 +29,13 @@ class Navigator
   float getLng();
   double getRelativeBearing(double* headingValue);
   bool hasFix();
-  int WAYPOINT_PROXIMITY = 5;
+  int WAYPOINT_PROXIMITY = 1;
   SmartBoat_Compass compass;
   
   private:  
   boolean usingInterrupt = false;
   double targetLat, targetLon;
-  int CALIBRATION = 16;
+  int CALIBRATION = 12;
   TestLatLong testData[18];
   int runningTestIndex = 0;
 };

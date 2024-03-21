@@ -424,7 +424,9 @@ void onReceiveLora(int packetSize)
   
   
   if(message.indexOf(loRaMessenger.SET_CALIBRATION_MESSAGE) >= 0) {
+    Serial.println(message);
     int c = loRaMessenger.parseInt(message, loRaMessenger.SET_CALIBRATION_MESSAGE);
+    Serial.println(c);
     if(c != -1) {
       beeper.beep(100);
       controller.setSteeringCalibration(c);

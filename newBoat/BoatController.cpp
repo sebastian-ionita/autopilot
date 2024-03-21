@@ -24,7 +24,7 @@ uint8_t GAS_CHANNEL = 1;
 uint8_t RIGHT_LOAD = 2;
 uint8_t LEFT_LOAD = 3;
 int STEERING_CALIBRATION = 5;
-int STEERING_DELAY = 800;
+int STEERING_DELAY = 1000;
 
 BoatController::BoatController()
 {
